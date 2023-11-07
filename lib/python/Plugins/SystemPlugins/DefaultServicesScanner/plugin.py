@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Components.NimManager import nimmanager
 from Plugins.Plugin import PluginDescriptor
 from Screens.ScanSetup import ScanSetup
@@ -11,17 +12,17 @@ from enigma import eTimer, eDVBDB
 class DefaultServiceScan(ServiceScan):
 	skin = """
 		<screen position="150,115" size="420,390" title="Service Scan">
-		<widget source="FrontendInfo" render="Pixmap" pixmap="icons/scan-s.png" position="5,5" size="64,64" transparent="1" alphatest="on">
+		<widget source="FrontendInfo" render="Pixmap" pixmap="icons/scan-s.png" position="5,5" size="64,64" transparent="1" alphaTest="on">
 			<convert type="FrontendInfo">TYPE</convert>
 			<convert type="ValueRange">0,0</convert>
 			<convert type="ConditionalShowHide" />
 		</widget>
-		<widget source="FrontendInfo" render="Pixmap" pixmap="icons/scan-c.png" position="5,5" size="64,64" transparent="1" alphatest="on">
+		<widget source="FrontendInfo" render="Pixmap" pixmap="icons/scan-c.png" position="5,5" size="64,64" transparent="1" alphaTest="on">
 			<convert type="FrontendInfo">TYPE</convert>
 			<convert type="ValueRange">1,1</convert>
 			<convert type="ConditionalShowHide" />
 		</widget>
-		<widget source="FrontendInfo" render="Pixmap" pixmap="icons/scan-t.png" position="5,5" size="64,64" transparent="1" alphatest="on">
+		<widget source="FrontendInfo" render="Pixmap" pixmap="icons/scan-t.png" position="5,5" size="64,64" transparent="1" alphaTest="on">
 			<convert type="FrontendInfo">TYPE</convert>
 			<convert type="ValueRange">2,2</convert>
 			<convert type="ConditionalShowHide" />
@@ -31,7 +32,7 @@ class DefaultServiceScan(ServiceScan):
 		<widget name="scan_state" position="10,80" zPosition="2" size="400,20" font="Regular;18" />
 		<widget name="pass" position="10,80" size="400,20" font="Regular;18" />
 		<widget name="scan_progress" position="10,105" size="400,15" pixmap="progress_big.png" borderWidth="2" borderColor="#cccccc" />
-		<widget name="servicelist" position="10,135" size="400,265" selectionDisabled="1" />
+		<widget name="servicelist" position="10,135" size="400,265" selection="1" />
 	</screen>"""
 
 	def __init__(self, session, scanList):
@@ -51,7 +52,7 @@ class DefaultServicesScannerPlugin(ScanSetup):
 	skin = """
 		<screen position="100,115" size="520,390" title="Service scan">
 			<widget name="config" position="10,10" size="500,350" scrollbarMode="showOnDemand" />
-			<widget name="introduction" position="10,365" size="500,25" font="Regular;20" halign="center" />
+			<widget name="introduction" position="10,365" size="500,25" font="Regular;20" horizontalAlignment="center" />
 		</screen>"""
 
 	def __init__(self, session, args=None):
@@ -73,11 +74,11 @@ class DefaultServicesScannerPlugin(ScanSetup):
 				self.multiscanlist[satindex][1].value = True
 
 	def runScan(self):
-		print "runScan"
+		print("runScan")
 		self.keyGo()
 
 	def startScan(self, tlist, flags, feid, networkid=0):
-		print "startScan"
+		print("startScan")
 		if len(tlist):
 			# flags |= eComponentScan.scanSearchBAT
 			self.session.openWithCallback(self.scanFinished, DefaultServiceScan, [{"transponders": tlist, "feid": feid, "flags": flags, "networkid": networkid}])
@@ -85,13 +86,13 @@ class DefaultServicesScannerPlugin(ScanSetup):
 			self.session.openWithCallback(self.scanFinished, MessageBox, _("Nothing to scan!\nPlease setup your tuner settings before you start a service scan."), MessageBox.TYPE_ERROR)
 
 	def scanFinished(self, value=None):
-		print "finished"
-		print "self.scanIndex:", self.scanIndex
+		print("finished")
+		print("self.scanIndex:", self.scanIndex)
 		db = eDVBDB.getInstance()
-		print "self.multiscanlist:", self.multiscanlist
+		print("self.multiscanlist:", self.multiscanlist)
 		if len(self.multiscanlist) - 1 >= self.scanIndex and len(self.multiscanlist[self.scanIndex]) > 0:
 			satint = self.multiscanlist[self.scanIndex][0]
-			print "scanned sat:", satint
+			print("scanned sat:", satint)
 			db.saveServicelist("/tmp/lamedb." + str(satint))
 			file = open("/tmp/sat" + str(satint) + ".info", "w")
 			xml = """<default>
@@ -116,7 +117,7 @@ class DefaultServicesScannerPlugin(ScanSetup):
 
 		self.scanIndex += 1
 		if self.scanIndex + 1 >= len(self.multiscanlist):
-			print "no more sats to scan"
+			print("no more sats to scan")
 			confdir = resolveFilename(SCOPE_CONFIG)
 			copyfile(confdir + "/lamedb.backup", confdir + "/lamedb")
 			db.reloadServicelist()

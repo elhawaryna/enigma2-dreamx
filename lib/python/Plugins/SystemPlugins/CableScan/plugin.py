@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Plugins.Plugin import PluginDescriptor
@@ -5,7 +6,7 @@ from Plugins.Plugin import PluginDescriptor
 from Components.Label import Label
 from Components.ActionMap import ActionMap
 from Components.NimManager import nimmanager
-from Components.config import config, ConfigSubsection, ConfigSelection, ConfigYesNo, ConfigInteger, getConfigListEntry, ConfigFloat
+from Components.config import config, ConfigSubsection, ConfigSelection, ConfigYesNo, ConfigInteger, ConfigFloat
 from Components.ConfigList import ConfigListScreen
 from Components.Sources.StaticText import StaticText
 from Components.ProgressBar import ProgressBar
@@ -61,7 +62,7 @@ class CableScan:
 class CableScanStatus(Screen):
 	skin = """
 	<screen position="center,115" size="420,180" title="Cable Scan">
-		<widget name="frontend" pixmap="icons/scan-c.png" position="5,5" size="64,64" transparent="1" alphatest="on" />
+		<widget name="frontend" pixmap="icons/scan-c.png" position="5,5" size="64,64" transparent="1" alphaTest="on" />
 		<widget name="scan_state" position="10,120" zPosition="2" size="400,30" font="Regular;18" />
 		<widget name="scan_progress" position="10,155" size="400,15" pixmap="progress_big.png" borderWidth="2" borderColor="#cccccc" />
 	</screen>"""
@@ -120,11 +121,11 @@ class CableScanScreen(ConfigListScreen, Screen):
 	skin = """
 	<screen position="center,115" size="520,390" title="Cable Scan">
 		<widget name="config" position="10,10" size="500,250" scrollbarMode="showOnDemand" />
-		<widget name="introduction" position="10,265" size="500,50" font="Regular;20" halign="center" />
-		<ePixmap pixmap="buttons/red.png" position="100,330" size="140,40" alphatest="on"/>
-		<ePixmap pixmap="buttons/green.png" position="270,330" size="140,40" alphatest="on"/>
-		<widget source="key_red" render="Label" position="100,330" zPosition="1" size="135,40" font="Regular;19" halign="center" valign="center" backgroundColor="#9f1313" transparent="1"/>
-		<widget source="key_green" render="Label" position="270,330" zPosition="1" size="135,40" font="Regular;19" halign="center" valign="center" backgroundColor="#1f771f" transparent="1"/>
+		<widget name="introduction" position="10,265" size="500,50" font="Regular;20" horizontalAlignment="center" />
+		<ePixmap pixmap="buttons/red.png" position="100,330" size="140,40" alphaTest="on"/>
+		<ePixmap pixmap="buttons/green.png" position="270,330" size="140,40" alphaTest="on"/>
+		<widget source="key_red" render="Label" position="100,330" zPosition="1" size="135,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#9f1313" transparent="1"/>
+		<widget source="key_green" render="Label" position="270,330" zPosition="1" size="135,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#1f771f" transparent="1"/>
 	</screen>"""
 
 	def __init__(self, session, nimlist):
@@ -146,13 +147,13 @@ class CableScanScreen(ConfigListScreen, Screen):
 		self.prevservice = None
 
 		self.list = []
-		self.list.append(getConfigListEntry(_('Frequency'), config.plugins.CableScan.frequency))
-		self.list.append(getConfigListEntry(_('Symbol rate'), config.plugins.CableScan.symbolrate))
-		self.list.append(getConfigListEntry(_('Modulation'), config.plugins.CableScan.modulation))
-		self.list.append(getConfigListEntry(_('Network ID') + _(' (0 - all networks)'), config.plugins.CableScan.networkid))
-		self.list.append(getConfigListEntry(_("Use official channel numbering"), config.plugins.CableScan.keepnumbering))
-		self.list.append(getConfigListEntry(_("HD list"), config.plugins.CableScan.hdlist))
-		self.list.append(getConfigListEntry(_("Enable auto cable scan"), config.plugins.CableScan.auto))
+		self.list.append((_('Frequency'), config.plugins.CableScan.frequency))
+		self.list.append((_('Symbol rate'), config.plugins.CableScan.symbolrate))
+		self.list.append((_('Modulation'), config.plugins.CableScan.modulation))
+		self.list.append((_('Network ID') + _(' (0 - all networks)'), config.plugins.CableScan.networkid))
+		self.list.append((_("Use official channel numbering"), config.plugins.CableScan.keepnumbering))
+		self.list.append((_("HD list"), config.plugins.CableScan.hdlist))
+		self.list.append((_("Enable auto cable scan"), config.plugins.CableScan.auto))
 
 		ConfigListScreen.__init__(self, self.list, session)
 		self["introduction"] = Label(_("Configure your network settings and press OK to scan"))
@@ -178,7 +179,7 @@ class CableScanScreen(ConfigListScreen, Screen):
 			if service:
 				tunedTunerMask = 2**service.frontendInfo().getAll(True)["tuner_number"]
 				recordingMask = sum([2**int(x) for x in [recording.frontendInfo().getAll(True)["tuner_number"] for recording in self.session.nav.getRecordings()]])
-				if not(tunedTunerMask & recordingMask):
+				if not (tunedTunerMask & recordingMask):
 					self.prevservice = self.session.nav.getCurrentlyPlayingServiceOrGroup()
 					self.session.nav.stopService()
 					freeTunerMask = tunedTunerMask
@@ -202,7 +203,7 @@ class CableScanScreen(ConfigListScreen, Screen):
 
 class CableScanAutoScreen(CableScanScreen):
 	def __init__(self, session, nimlist):
-		print "[AutoCableScan] start"
+		print("[AutoCableScan] start")
 		Screen.__init__(self, session)
 		self.skinName = "Standby"
 
@@ -228,14 +229,14 @@ class CableScanAutoScreen(CableScanScreen):
 			del self.scan
 
 	def scanCompleted(self, result):
-		print "[AutoCableScan] completed result = ", result
+		print("[AutoCableScan] completed result = ", result)
 		refreshServiceList()
 		self.close(result > 0)
 
 	def Power(self):
 		from Screens.Standby import inStandby
 		inStandby.Power()
-		print "[AutoCableScan] aborted due to power button pressed"
+		print("[AutoCableScan] aborted due to power button pressed")
 		self.close(True)
 
 	def createSummary(self):
@@ -255,7 +256,7 @@ def restartScanAutoStartTimer(reply=False):
 	if reply:
 		CableScanAutoStartTimer.startLongTimer(86400)
 	else:
-		print "[AutoCableScan] Scan was not successful retry in one hour"
+		print("[AutoCableScan] Scan was not successful retry in one hour")
 		CableScanAutoStartTimer.startLongTimer(3600)
 
 
