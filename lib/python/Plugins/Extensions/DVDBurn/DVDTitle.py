@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from Components.config import config, ConfigSubsection, ConfigSubList, ConfigInteger, ConfigText, ConfigSelection
-import TitleCutter
+from . import TitleCutter
 
 
 class ConfigFixedText(ConfigText):
@@ -15,7 +16,7 @@ class DVDTitle:
 		self.properties = ConfigSubsection()
 		self.properties.menutitle = ConfigText(fixed_size=False, visible_width=80)
 		self.properties.menusubtitle = ConfigText(fixed_size=False, visible_width=80)
-		self.properties.aspect = ConfigSelection(choices=[("4:3", _("4:3")), ("16:9", _("16:9"))])
+		self.properties.aspect = ConfigSelection(choices=[("4:3", "4:3"), ("16:9", "16:9")])
 		self.properties.widescreen = ConfigSelection(choices=[("nopanscan", "nopanscan"), ("noletterbox", "noletterbox")])
 		self.properties.autochapter = ConfigInteger(default=0, limits=(0, 60))
 		self.properties.audiotracks = ConfigSubList()
@@ -81,7 +82,7 @@ class DVDTitle:
 		template = template.replace("$C", self.DVBchannel)
 
 		#if template.find("$A") >= 0:
-		from TitleProperties import languageChoices
+		from .TitleProperties import languageChoices
 		audiolist = []
 		for audiotrack in self.properties.audiotracks:
 			active = audiotrack.active.getValue()

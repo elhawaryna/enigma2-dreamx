@@ -1,10 +1,11 @@
-import DVDProject
-import TitleList
-import TitleCutter
-import TitleProperties
-import ProjectSettings
-import DVDToolbox
-import Process
+# -*- coding: utf-8 -*-
+from . import DVDProject
+from . import TitleList
+from . import TitleCutter
+from . import TitleProperties
+from . import ProjectSettings
+from . import DVDToolbox
+from . import Process
 from Screens.Screen import Screen
 from Screens.ChoiceBox import ChoiceBox
 from Screens.MessageBox import MessageBox
@@ -24,14 +25,14 @@ from Tools.Directories import resolveFilename, SCOPE_PLUGINS
 class TitleList(Screen, HelpableScreen):
 	skin = """
 		<screen name="TitleList" position="center,center" size="560,470" title="DVD Tool" >
-			<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphatest="on" />
-			<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphatest="on" />
-			<ePixmap pixmap="buttons/yellow.png" position="280,0" size="140,40" alphatest="on" />
-			<ePixmap pixmap="buttons/blue.png" position="420,0" size="140,40" alphatest="on" />
-			<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;19" halign="center" valign="center" backgroundColor="#9f1313" transparent="1" />
-			<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;19" halign="center" valign="center" backgroundColor="#1f771f" transparent="1" />
-			<widget source="key_yellow" render="Label" position="280,0" zPosition="1" size="140,40" font="Regular;19" halign="center" valign="center" backgroundColor="#a08500" transparent="1" />
-			<widget source="key_blue" render="Label" position="420,0" zPosition="1" size="140,40" font="Regular;19" halign="center" valign="center" backgroundColor="#18188b" transparent="1" />
+			<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphaTest="on" />
+			<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphaTest="on" />
+			<ePixmap pixmap="buttons/yellow.png" position="280,0" size="140,40" alphaTest="on" />
+			<ePixmap pixmap="buttons/blue.png" position="420,0" size="140,40" alphaTest="on" />
+			<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#9f1313" transparent="1" />
+			<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#1f771f" transparent="1" />
+			<widget source="key_yellow" render="Label" position="280,0" zPosition="1" size="140,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#a08500" transparent="1" />
+			<widget source="key_blue" render="Label" position="420,0" zPosition="1" size="140,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#18188b" transparent="1" />
 			<widget source="title_label" render="Label" position="10,48" size="540,38" font="Regular;18" transparent="1" />
 			<widget source="error_label" render="Label" position="10,48" size="540,296" zPosition="3" font="Regular;20" transparent="1" />
 			<widget source="titles" render="Listbox" scrollbarMode="showOnDemand" position="10,86" size="546,296" zPosition="3" transparent="1" >
@@ -49,13 +50,13 @@ class TitleList(Screen, HelpableScreen):
 				</convert>
 			</widget>
 			<ePixmap pixmap="div-h.png" position="0,390" zPosition="10" size="560,2" />
-			<ePixmap pixmap="buttons/key_menu.png" position="10,394" size="35,25" alphatest="on" />
-			<widget source="hint" render="Label" position="50,396" size="540,22" font="Regular;18" halign="left" />
-			<widget name="medium_label"  position="10,420" size="540,22" font="Regular;18" halign="left" foregroundColors="#FFFFFF,#FFFF00,#FF0000" />
+			<ePixmap pixmap="buttons/key_menu.png" position="10,394" size="35,25" alphaTest="on" />
+			<widget source="hint" render="Label" position="50,396" size="540,22" font="Regular;18" horizontalAlignment="left" />
+			<widget name="medium_label"  position="10,420" size="540,22" font="Regular;18" horizontalAlignment="left" foregroundColors="#FFFFFF,#FFFF00,#FF0000" />
 			<widget source="space_bar_single" render="Progress" position="10,446" size="270,24" borderWidth="1" zPosition="2" backgroundColor="#254f7497" />
-			<widget source="space_label_single" render="Label" position="10,449" size="270,22" zPosition="3" font="Regular;18" halign="center" transparent="1" foregroundColor="#000000" />
+			<widget source="space_label_single" render="Label" position="10,449" size="270,22" zPosition="3" font="Regular;18" horizontalAlignment="center" transparent="1" foregroundColor="#000000" />
 			<widget source="space_bar_dual" render="Progress" position="10,446" size="540,24" borderWidth="1" backgroundColor="#254f7497" />
-			<widget source="space_label_dual" render="Label" position="10,449" size="540,22" zPosition="2" font="Regular;18" halign="center" transparent="1" foregroundColor="#000000" />
+			<widget source="space_label_dual" render="Label" position="10,449" size="540,22" zPosition="2" font="Regular;18" horizontalAlignment="center" transparent="1" foregroundColor="#000000" />
 
 		</screen>"""
 
@@ -65,7 +66,7 @@ class TitleList(Screen, HelpableScreen):
 
 		self.setTitle(_("DVD titlelist"))
 
-		self["titleactions"] = HelpableActionMap(self, "DVDTitleList",
+		self["titleactions"] = HelpableActionMap(self, ["DVDTitleList"],
 			{
 				"addTitle": (self.addTitle, _("Add a new title"), _("Add title")),
 				"titleProperties": (self.titleProperties, _("Properties of current title"), _("Title properties")),
@@ -74,7 +75,7 @@ class TitleList(Screen, HelpableScreen):
 				"burnProject": (self.askBurnProject, _("Burn DVD"), _("Burn DVD")),
 			})
 
-		self["MovieSelectionActions"] = HelpableActionMap(self, "MovieSelectionActions",
+		self["MovieSelectionActions"] = HelpableActionMap(self, ["MovieSelectionActions"],
 			{
 				"contextMenu": (self.showMenu, _("menu")),
 			})
@@ -107,9 +108,9 @@ class TitleList(Screen, HelpableScreen):
 
 	def checkBackgroundJobs(self):
 		for job in job_manager.getPendingJobs():
-			print "type(job):", type(job)
-			print "Process.DVDJob:", Process.DVDJob
-			if type(job) == Process.DVDJob:
+			print("type(job):", type(job))
+			print("Process.DVDJob:", Process.DVDJob)
+			if isinstance(job, Process.DVDJob):
 				self.backgroundJob = job
 				return
 		self.backgroundJob = None
@@ -162,29 +163,29 @@ class TitleList(Screen, HelpableScreen):
 
 		class DVDMovieSelection(MovieSelection):
 			skin = """<screen name="DVDMovieSelection" position="center,center" size="560,445" title="Select a movie">
-				<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphatest="on" />
-				<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphatest="on" />
-				<ePixmap pixmap="buttons/yellow.png" position="280,0" size="140,40" alphatest="on" />
-				<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;19" halign="center" valign="center" backgroundColor="#9f1313" transparent="1" />
-				<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;19" halign="center" valign="center" backgroundColor="#1f771f" transparent="1" />
-				<widget source="key_yellow" render="Label" position="280,0" zPosition="1" size="140,40" font="Regular;19" halign="center" valign="center" backgroundColor="#a08500" transparent="1" />
-				<widget name="waitingtext" position="0,45" size="560,395" zPosition="4" font="Regular;22" halign="center" valign="center" />
+				<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphaTest="on" />
+				<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphaTest="on" />
+				<ePixmap pixmap="buttons/yellow.png" position="280,0" size="140,40" alphaTest="on" />
+				<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#9f1313" transparent="1" />
+				<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#1f771f" transparent="1" />
+				<widget source="key_yellow" render="Label" position="280,0" zPosition="1" size="140,40" font="Regular;19" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#a08500" transparent="1" />
+				<widget name="waitingtext" position="0,45" size="560,395" zPosition="4" font="Regular;22" horizontalAlignment="center" verticalAlignment="center" />
 				<widget name="list" position="5,40" size="550,375" zPosition="2" scrollbarMode="showOnDemand" />
-				<widget name="DescriptionBorder" pixmap="border_eventinfo.png" position="0,316" zPosition="1" size="560,103" transparent="1" alphatest="on" />
+				<widget name="DescriptionBorder" pixmap="border_eventinfo.png" position="0,316" zPosition="1" size="560,103" transparent="1" alphaTest="on" />
 				<widget source="Service" render="Label" position="5,318" zPosition="1" size="480,35" font="Regular;17" foregroundColor="#cccccc">
 					<convert type="MovieInfo">ShortDescription</convert>
 				</widget>
-				<widget source="Service" render="Label" position="495,318" zPosition="1" size="60,22" font="Regular;17" halign="right">
+				<widget source="Service" render="Label" position="495,318" zPosition="1" size="60,22" font="Regular;17" horizontalAlignment="right">
 					<convert type="ServiceTime">Duration</convert>
 					<convert type="ClockToText">AsLength</convert>
 				</widget>
-				<widget source="Service" render="Label" position="380,337" zPosition="2" size="175,22" font="Regular;17" halign="right">
+				<widget source="Service" render="Label" position="380,337" zPosition="2" size="175,22" font="Regular;17" horizontalAlignment="right">
 					<convert type="MovieInfo">RecordServiceName</convert>
 				</widget>
 				<widget source="Service" render="Label" position="5,357" zPosition="1" size="550,58" font="Regular;19">
 					<convert type="EventName">ExtendedDescription</convert>
 				</widget>
-				<widget name="freeDiskSpace" position="10,425" size="540,20" font="Regular;19" valign="center" halign="right" />
+				<widget name="freeDiskSpace" position="10,425" size="540,20" font="Regular;19" verticalAlignment="center" horizontalAlignment="right" />
 			</screen>"""
 
 			def __init__(self, session):
@@ -192,7 +193,7 @@ class TitleList(Screen, HelpableScreen):
 				self["key_red"] = StaticText(_("Close"))
 				self["key_green"] = StaticText(_("Add"))
 				self["key_yellow"] = StaticText(_("Edit title"))
-				self["ColorActions"] = HelpableActionMap(self, "ColorActions",
+				self["ColorActions"] = HelpableActionMap(self, ["ColorActions"],
 				{
 					"red": (self.close, _("Close title selection")),
 					"green": (self.insertWithoutEdit, ("insert without cutlist editor")),
@@ -203,7 +204,7 @@ class TitleList(Screen, HelpableScreen):
 				pass
 
 			def doContext(self):
-				print "context menu forbidden inside DVDBurn to prevent calling multiple instances"
+				print("context menu forbidden inside DVDBurn to prevent calling multiple instances")
 
 			def updateButtons(self):
 				# the original will hide red/green, and crash...
@@ -316,7 +317,7 @@ class TitleList(Screen, HelpableScreen):
 		size = self.project.size / (1024 * 1024)
 		MAX_DL = self.project.MAX_DL - 100
 		MAX_SL = self.project.MAX_SL - 100
-		print "updateSize:", size, "MAX_DL:", MAX_DL, "MAX_SL:", MAX_SL
+		print("updateSize:", size, "MAX_DL:", MAX_DL, "MAX_SL:", MAX_SL)
 		if size > MAX_DL:
 			percent = 100 * size / float(MAX_DL)
 			self["space_label_dual"].text = "%d MB (%.2f%%)" % (size, percent)
@@ -390,6 +391,6 @@ class TitleList(Screen, HelpableScreen):
 			self.session.openWithCallback(self.exitCB, MessageBox, text=_("Your current collection will get lost!") + "\n" + _("Do you really want to exit?"), type=MessageBox.TYPE_YESNO)
 
 	def exitCB(self, answer):
-		print "exitCB", answer
+		print("exitCB", answer)
 		if answer is not None and answer:
 			self.close()

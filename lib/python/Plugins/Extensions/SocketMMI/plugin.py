@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from Plugins.Plugin import PluginDescriptor
-from SocketMMI import SocketMMIMessageHandler
+from .SocketMMI import SocketMMIMessageHandler
 
 socketHandler = None
 
