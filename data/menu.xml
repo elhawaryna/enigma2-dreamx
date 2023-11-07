@@ -39,11 +39,16 @@
 			</menu>
 			<menu weight="5" level="0" text="System" entryID="system_selection">
 				<id val="system"/>
+				<menu weight="0" level="0" text="Check update Settings" entryID="check_update">
+					<id val="update"/>
+					<item level="0" entryID="check_update"><setup id="checkupdate"/></item>
+				</menu>
 				<menu level="0" text="Audio &amp; Video" entryID="video_selection">
 					<id val="video"/>
 					<item level="0" entryID="av_setup"><setup id="avsetup"/></item>
 					<item entryID="subtitle_setup" level="2" text="Subtitle Setup" weight="20"><setup id="subtitlesetup" /></item>
 					<item level="0" entryID="autolanguage_setup" text="Auto Language Setup"><setup id="autolanguagesetup"/></item>
+					<item key="osdsetup" level="1" text="OSD Position Settings" weight="50" requires="CanChangeOsdPosition"><screen module="UserInterfacePositioner" screen="UserInterfacePositioner2" /></item>
 				</menu>
 				<menu level="0" text="GUI Settings" entryID="gui_settings">
 					<id val="gui"/>
@@ -127,6 +132,7 @@ self.session.openWithCallback(msgClosed, EpgDeleteMsg)
 					<item level="0" entryID="harddisk_setup"><setup id="harddisk"/></item>
 					<item level="0" text="Initialization" entryID="harddisk_init"><screen module="HarddiskSetup" screen="HarddiskSelection"/></item>
 					<item level="0" text="Filesystem check" entryID="harddisk_check"><screen module="HarddiskSetup" screen="HarddiskFsckSelection"/></item>
+					<item entryID="flash_expander" level="2" text="Flash Expander" weight="40"><screen module="FlashExpander" screen="FlashExpander" /></item>
 				</menu>
 				<item level="0" text="Network" entryID="network_setup"><screen module="NetworkSetup" screen="NetworkAdapterSelection"/></item>
 				<item level="1" text="Input devices" entryID="input_device_setup"><screen module="InputDeviceSetup" screen="InputDeviceSelection"/></item>
@@ -143,7 +149,7 @@ self.session.openWithCallback(msgClosed, EpgDeleteMsg)
 
 			<item weight="15" level="0" text="Parental control" entryID="parental_setup"><screen module="ParentalControlSetup" screen="ParentalControlSetup"/></item>
 			<item weight="15" level="0" text="Factory reset" entryID="factory_reset"><screen module="FactoryReset" screen="FactoryReset"/></item>
-			<item weight="15" level="0" text="Flash image" entryID="flash_image" requires="canFlashWithOfgwrite" ><screen module="FlashImage" screen="SelectImage"/></item>
+			<!--item weight="15" level="0" text="Flash image" entryID="flash_image" requires="canFlashWithOfgwrite" ><screen module="FlashImage" screen="SelectImage"/></item-->
 			<!--item weight="15" level="0" text="Software update" entryID="software_update"><screen module="SoftwareUpdate" screen="UpdatePlugin"/></item-->
 		</menu>
 
@@ -152,6 +158,7 @@ self.session.openWithCallback(msgClosed, EpgDeleteMsg)
 			<item text="Sleep timer" entryID="sleep"><screen module="SleepTimerEdit" screen="SleepTimerEdit"/></item>
 			<item text="Standby" entryID="standby"><screen module="Standby" screen="Standby"/></item>
 			<item text="Full Restart" entryID="restart"><screen module="Standby" screen="TryQuitMainloop">2</screen></item>
+			<item weight="24" level="0" text="Switch to Android" requires="canDualBoot" entryID="dualboot"><screen module="Standby" screen="SwitchToAndroid" /></item>
 			<!--item text="Restart enigma" requires="InDebugMode" entryID="restart_enigma_debug"><screen module="Standby" screen="TryQuitMainloop">6</screen></item>
 			<item text="Restart enigma" requires="!InDebugMode" entryID="restart_enigma"><screen module="Standby" screen="TryQuitMainloop">3</screen></item-->
 			<item text="Restart enigma" entryID="restart_enigma"><screen module="Standby" screen="TryQuitMainloop">3</screen></item>
