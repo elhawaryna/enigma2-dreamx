@@ -1,9 +1,10 @@
-from GUIComponent import GUIComponent
-from skin import parseFont, parseScale
+# -*- coding: utf-8 -*-
+from Components.GUIComponent import GUIComponent
+from skin import parseFont
 
 from Tools.FuzzyDate import FuzzyTime
 
-from enigma import eListboxPythonMultiContent, eListbox, gFont, getBestPlayableServiceReference, eServiceReference, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_TOP, RT_VALIGN_BOTTOM
+from enigma import eListboxPythonMultiContent, eListbox, gFont, getBestPlayableServiceReference, eServiceReference, iRecordableServicePtr, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_TOP, RT_VALIGN_BOTTOM
 from Tools.Alternatives import GetWithAlternative
 from Tools.LoadPixmap import LoadPixmap
 from Tools.TextBoundary import getTextBoundarySize
@@ -26,10 +27,10 @@ class TimerList(GUIComponent):
 			serviceNameWidth = width - 200 - self.iconWidth - self.iconMargin
 
 		if timer.external:
-			res.append((eListboxPythonMultiContent.TYPE_TEXT, width - serviceNameWidth, 0, serviceNameWidth, self.rowSplit, 0, RT_HALIGN_RIGHT | RT_VALIGN_BOTTOM, serviceName, self.backupColor, self.backupColorSel, None, None, None, None))
+			res.append((eListboxPythonMultiContent.TYPE_TEXT, width - serviceNameWidth - self.iconMargin, 0, serviceNameWidth, self.rowSplit, 0, RT_HALIGN_RIGHT | RT_VALIGN_BOTTOM, serviceName, self.backupColor, self.backupColorSel, None, None, None, None))
 		else:
-			res.append((eListboxPythonMultiContent.TYPE_TEXT, width - serviceNameWidth, 0, serviceNameWidth, self.rowSplit, 0, RT_HALIGN_RIGHT | RT_VALIGN_BOTTOM, serviceName))
-		res.append((eListboxPythonMultiContent.TYPE_TEXT, self.iconWidth + self.iconMargin, 0, width - serviceNameWidth - self.iconWidth - self.iconMargin, self.rowSplit, 2, RT_HALIGN_LEFT | RT_VALIGN_BOTTOM, timer.name))
+			res.append((eListboxPythonMultiContent.TYPE_TEXT, width - serviceNameWidth - self.iconMargin, 0, serviceNameWidth, self.rowSplit, 0, RT_HALIGN_RIGHT | RT_VALIGN_BOTTOM, serviceName))
+		res.append((eListboxPythonMultiContent.TYPE_TEXT, self.iconWidth + self.iconMargin, 0, width - serviceNameWidth - self.iconWidth - self.iconMargin * 2, self.rowSplit, 2, RT_HALIGN_LEFT | RT_VALIGN_BOTTOM, timer.name))
 
 		begin = FuzzyTime(timer.begin)
 		if timer.repeated:
@@ -42,11 +43,11 @@ class TimerList(GUIComponent):
 				flags >>= 1
 			repeatedtext = ", ".join(repeatedtext)
 			if self.iconRepeat:
-				res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHABLEND, self.iconMargin / 2, self.rowSplit + (self.itemHeight - self.rowSplit - self.iconHeight) / 2, self.iconWidth, self.iconHeight, self.iconRepeat))
+				res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHABLEND, self.iconMargin // 2, self.rowSplit + (self.itemHeight - self.rowSplit - self.iconHeight) // 2, self.iconWidth, self.iconHeight, self.iconRepeat))
 		else:
 			repeatedtext = begin[0] # date
 			if "autotimer" in timer.flags:
-				self.iconAutoTimer and res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHABLEND, self.iconMargin / 2, self.rowSplit + (self.itemHeight - self.rowSplit - self.iconHeight) / 2, self.iconWidth, self.iconHeight, self.iconAutoTimer))
+				self.iconAutoTimer and res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHABLEND, self.iconMargin // 2, self.rowSplit + (self.itemHeight - self.rowSplit - self.iconHeight) // 2, self.iconWidth, self.iconHeight, self.iconAutoTimer))
 		if timer.justplay:
 			if timer.pipzap:
 				extra_text = _("(ZAP as PiP)")
@@ -54,7 +55,7 @@ class TimerList(GUIComponent):
 				extra_text = _("(ZAP)")
 			text = repeatedtext + ((" %s %s") % (begin[1], extra_text))
 		else:
-			text = repeatedtext + ((" %s ... %s (%d " + _("mins") + ")") % (begin[1], FuzzyTime(timer.end)[1], (timer.end - timer.begin) / 60))
+			text = repeatedtext + ((" %s ... %s (%d " + _("mins") + ")") % (begin[1], FuzzyTime(timer.end)[1], (timer.end - timer.begin) // 60))
 		icon = None
 		if not processed and (not timer.disabled or (timer.repeated and timer.isRunning() and not timer.justplay)):
 			if timer.state == TimerEntry.StateWaiting:
@@ -83,12 +84,12 @@ class TimerList(GUIComponent):
 			state = _("done!")
 			icon = self.iconDone
 
-		icon and res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHABLEND, self.iconMargin / 2, (self.rowSplit - self.iconHeight) / 2, self.iconWidth, self.iconHeight, icon))
-		orbpos = self.getOrbitalPos(timer.service_ref, timer.state)
+		icon and res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHABLEND, self.iconMargin // 2, (self.rowSplit - self.iconHeight) // 2, self.iconWidth, self.iconHeight, icon))
+		orbpos = self.getOrbitalPos(timer.service_ref, timer.state, hasattr(timer, "record_service") and timer.record_service or None)
 		orbposWidth = getTextBoundarySize(self.instance, self.font, self.l.getItemSize(), orbpos).width()
 		res.append((eListboxPythonMultiContent.TYPE_TEXT, self.satPosLeft, self.rowSplit, orbposWidth, self.itemHeight - self.rowSplit, 1, RT_HALIGN_LEFT | RT_VALIGN_TOP, orbpos))
 		res.append((eListboxPythonMultiContent.TYPE_TEXT, self.iconWidth + self.iconMargin, self.rowSplit, self.satPosLeft - self.iconWidth - self.iconMargin, self.itemHeight - self.rowSplit, 1, RT_HALIGN_LEFT | RT_VALIGN_TOP, state))
-		res.append((eListboxPythonMultiContent.TYPE_TEXT, self.satPosLeft + orbposWidth, self.rowSplit, width - self.satPosLeft - orbposWidth, self.itemHeight - self.rowSplit, 1, RT_HALIGN_RIGHT | RT_VALIGN_TOP, text))
+		res.append((eListboxPythonMultiContent.TYPE_TEXT, self.satPosLeft + orbposWidth, self.rowSplit, width - self.satPosLeft - orbposWidth - self.iconMargin, self.itemHeight - self.rowSplit, 1, RT_HALIGN_RIGHT | RT_VALIGN_TOP, text))
 		return res
 
 	def __init__(self, list):
@@ -118,7 +119,7 @@ class TimerList(GUIComponent):
 
 	def applySkin(self, desktop, parent):
 		def itemHeight(value):
-			self.itemHeight = parseScale(value)
+			self.itemHeight = int(value)
 
 		def setServiceNameFont(value):
 			self.serviceNameFont = parseFont(value, ((1, 1), (1, 1)))
@@ -130,13 +131,13 @@ class TimerList(GUIComponent):
 			self.font = parseFont(value, ((1, 1), (1, 1)))
 
 		def rowSplit(value):
-			self.rowSplit = parseScale(value)
+			self.rowSplit = int(value)
 
 		def iconMargin(value):
-			self.iconMargin = parseScale(value)
+			self.iconMargin = int(value)
 
 		def satPosLeft(value):
-			self.satPosLeft = parseScale(value)
+			self.satPosLeft = int(value)
 
 		def backupColor(value):
 			self.backupColor = int(value)
@@ -184,16 +185,15 @@ class TimerList(GUIComponent):
 	def entryRemoved(self, idx):
 		self.l.entryRemoved(idx)
 
-	def getOrbitalPos(self, ref, state):
-		refstr = ''
-		alternative = ''
-		if hasattr(ref, 'sref'):
+	def getOrbitalPos(self, ref, state, record_service=None):
+		tuner_name = refstr = alternative = ""
+		if hasattr(ref, "sref"):
 			refstr = str(ref.sref)
 		else:
 			refstr = str(ref)
-		if refstr and refstr.startswith('1:134:'):
+		if refstr and refstr.startswith("1:134:"):
 			alternative = " (A)"
-			if state in (1, 2) and not hasattr(ref, 'sref'):
+			if state in (1, 2) and not hasattr(ref, "sref"):
 				current_ref = getBestPlayableServiceReference(ref.ref, eServiceReference())
 				if not current_ref:
 					return _("N/A") + alternative
@@ -201,15 +201,23 @@ class TimerList(GUIComponent):
 					refstr = current_ref.toString()
 			else:
 				refstr = GetWithAlternative(refstr)
-		if '%3a//' in refstr:
+		if "%3a//" in refstr:
 			return "%s" % _("Stream") + alternative
-		op = int(refstr.split(':', 10)[6][:-4] or "0", 16)
+		if record_service and state in (1, 2) and not hasattr(ref, "sref"):
+			if isinstance(record_service, iRecordableServicePtr):
+				feinfo = hasattr(record_service, "frontendInfo") and record_service.frontendInfo()
+				data = feinfo and hasattr(feinfo, "getFrontendData") and feinfo.getFrontendData()
+				if data:
+					number = data.get("tuner_number", None)
+					if number != None and isinstance(number, int):
+						tuner_name = "%s: " % chr(number + 65)
+		op = int(refstr.split(":", 10)[6][:-4] or "0", 16)
 		if op == 0xeeee:
-			return "%s" % "DVB-T" + alternative
+			return tuner_name + ("%s" % "DVB-T") + alternative
 		if op == 0xffff:
-			return "%s" % "DVB-C" + alternative
-		direction = 'E'
+			return tuner_name + ("%s" % "DVB-C") + alternative
+		direction = "E"
 		if op > 1800:
 			op = 3600 - op
-			direction = 'W'
-		return ("%d.%d\xc2\xb0%s") % (op // 10, op % 10, direction) + alternative
+			direction = "W"
+		return tuner_name + ("%d.%d\xb0%s" % (op // 10, op % 10, direction)) + alternative

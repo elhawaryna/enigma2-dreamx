@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import xml.sax
 from Tools.Directories import crawlDirectory, resolveFilename, SCOPE_CONFIG, SCOPE_SKIN, copyfile, copytree
 from Components.Console import Console
@@ -30,7 +31,7 @@ class InfoHandler(xml.sax.ContentHandler):
 		self.data = ""
 
 	def printError(self, error):
-		raise InfoHandlerParseError, error
+		raise InfoHandlerParseError(error)
 
 	def startElement(self, name, attrs):
 		self.elements.append(name)

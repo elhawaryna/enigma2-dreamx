@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from bisect import insort
 from Tools.Directories import fileExists, resolveFilename, SCOPE_PLUGINS
@@ -16,7 +17,7 @@ class PluginComponent:
 		self.pluginList = []
 		self.installedPluginList = []
 		self.setPluginPrefix("Plugins.")
-		self.resetWarnings()
+		self.pluginWarnings = []
 
 	def setPluginPrefix(self, prefix):
 		self.prefix = prefix
@@ -32,7 +33,8 @@ class PluginComponent:
 			self.restartRequired = True
 
 	def removePlugin(self, plugin):
-		self.pluginList.remove(plugin)
+		if plugin in self.pluginList:
+			self.pluginList.remove(plugin)
 		for x in plugin.where:
 			self.plugins[x].remove(plugin)
 			if x == PluginDescriptor.WHERE_AUTOSTART:
@@ -46,28 +48,25 @@ class PluginComponent:
 			if not os.path.isdir(directory_category):
 				continue
 			for pluginname in os.listdir(directory_category):
-				#path = os.path.join(directory_category, pluginname)
-				path = directory_category + '/' + pluginname
+				if pluginname == "__pycache__":
+					continue
+				path = os.path.join(directory_category, pluginname)
 				if os.path.isdir(path):
-						#profile('plugin ' + pluginname)
-					if fileExists(path + '/plugin.pyc') or fileExists(path + '/plugin.pyo') or fileExists(path + '/plugin.py') or fileExists(path + '/plugin.so'):
+						profile('plugin ' + pluginname)
 						try:
 							plugin = my_import('.'.join(["Plugins", c, pluginname, "plugin"]))
-							if "Plugins" not in plugin.__dict__:
-                                                               print("Plugin %s doesn't have 'Plugin'-call." % pluginname)
-                                                               continue
 							plugins = plugin.Plugins(path=path)
-						except Exception, exc:
-							print "Plugin ", c + "/" + pluginname, "failed to load:", exc
+						except Exception as exc:
+							print("Plugin ", c + "/" + pluginname, "failed to load:", exc)
 							# supress errors due to missing plugin.py* files (badly removed plugin)
-							for fn in ('plugin.py', 'plugin.pyo'):
+							for fn in ('plugin.py', 'plugin.pyc'):
 								if os.path.exists(os.path.join(path, fn)):
-									self.warnings.append((c + "/" + pluginname, str(exc)))
+									self.pluginWarnings.append((c + "/" + pluginname, str(exc)))
 									from traceback import print_exc
 									print_exc()
 									break
 							else:
-								print "Plugin probably removed, but not cleanly in", path
+								print("Plugin probably removed, but not cleanly in", path)
 								try:
 									os.rmdir(path)
 								except:
@@ -79,17 +78,18 @@ class PluginComponent:
 							plugins = [plugins]
 
 						for p in plugins:
-							p.path = path
-							p.updateIcon(path)
-							new_plugins.append(p)
+							if p:
+								p.path = path
+								p.updateIcon(path)
+								new_plugins.append(p)
 
 						keymap = os.path.join(path, "keymap.xml")
 						if fileExists(keymap):
 							try:
 								keymapparser.readKeymap(keymap)
-							except Exception, exc:
-								print "keymap for plugin %s/%s failed to load: " % (c, pluginname), exc
-								self.warnings.append((c + "/" + pluginname, str(exc)))
+							except Exception as exc:
+								print("keymap for plugin %s/%s failed to load: " % (c, pluginname), exc)
+								self.pluginWarnings.append((c + "/" + pluginname, str(exc)))
 
 		# build a diff between the old list of plugins and the new one
 		# internally, the "fnc" argument will be compared with __eq__
@@ -106,7 +106,7 @@ class PluginComponent:
 			self.removePlugin(p)
 
 		for p in plugins_added:
-			if self.firstRun or p.needsRestart is False:
+			if self.firstRun or not p.needsRestart:
 				self.addPlugin(p)
 			else:
 				for installed_plugin in self.installedPluginList:
@@ -151,8 +151,13 @@ class PluginComponent:
 		for p in self.pluginList[:]:
 			self.removePlugin(p)
 
+	def getWarnings(self):
+		return self.pluginWarnings
+
+	warnings = property(getWarnings)
+	
 	def resetWarnings(self):
-		self.warnings = []
+		self.pluginWarnings = []
 
 	def getNextWakeupTime(self):
 		wakeup = -1
@@ -163,4 +168,5 @@ class PluginComponent:
 		return int(wakeup)
 
 
-plugins = PluginComponent()
+pluginComponent = PluginComponent()
+plugins = pluginComponent  # Retain the legacy name until all code is updated.

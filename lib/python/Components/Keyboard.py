@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from os import listdir
 
 from Components.Console import Console
@@ -24,27 +25,27 @@ class Keyboard:
 							if key == "name":
 								mapName = val
 				except (IOError, OSError) as err:
-					print "[Keyboard] Error %d: Opening keymap file '%s'! (%s)" % (err.errno, keymapFile, err.strerror)
+					print("[Keyboard] Error %d: Opening keymap file '%s'! (%s)" % (err.errno, keymapFile, err.strerror))
 				if mapFile is not None and mapName is not None:
-					print "[Keyboard] Adding keymap '%s' ('%s')." % (mapName, mapFile)
+					print("[Keyboard] Adding keymap '%s' ('%s')." % (mapName, mapFile))
 					self.keyboardMaps.append((mapFile, mapName))
 
 	def activateKeyboardMap(self, index):
 		try:
 			keymap = self.keyboardMaps[index]
-			print "[Keyboard] Activating keymap: '%s'." % keymap[1]
+			print("[Keyboard] Activating keymap: '%s'." % keymap[1])
 			keymapPath = resolveFilename(SCOPE_KEYMAPS, keymap[0])
 			if pathExists(keymapPath):
 				Console().ePopen("loadkmap < %s" % keymapPath)
 		except IndexError:
-			print "[Keyboard] Error: Selected keymap does not exist!"
+			print("[Keyboard] Error: Selected keymap does not exist!")
 
 	def getKeyboardMaplist(self):
 		return self.keyboardMaps
 
 	def getDefaultKeyboardMap(self):
 		# This is a code proposal to make the default keymap respond
-		# to the currently defined locale.  OpenATV initialises the
+		# to the currently defined locale.  OpenPLI initialises the
 		# keymap based on hardware manufacturer.  Making the
 		# selection based on language locale makes more sense.  There
 		# are other code changes coming that will allow this to happen.

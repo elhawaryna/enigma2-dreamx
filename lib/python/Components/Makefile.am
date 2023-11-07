@@ -1,6 +1,6 @@
 installdir = $(pkglibdir)/python/Components
 
-SUBDIRS = Sources Converter Renderer
+SUBDIRS = Sources Converter Renderer Addons
 
 install_PYTHON = \
 	ActionMap.py PerServiceDisplay.py \
@@ -20,6 +20,6 @@ install_PYTHON = \
 	Opkg.py SelectionList.py Scanner.py SystemInfo.py PackageInfo.py \
 	Task.py Console.py ResourceManager.py TuneTest.py \
 	Keyboard.py Sensors.py FanControl.py HdmiCec.py RcModel.py \
-	Netlink.py InputHotplug.py \
-	ImportChannels.py StackTrace.py EpgLoadSave.py NetworkTime.py \
-	HdmiRecord.py
+	Netlink.py InputHotplug.py updatecheck.py \
+	ImportChannels.py StackTrace.py EpgLoadSave.py \
+	HdmiRecord.py PowerOffTimer.py NetworkTime.py

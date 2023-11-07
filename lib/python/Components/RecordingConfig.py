@@ -1,4 +1,5 @@
-from config import ConfigNumber, ConfigYesNo, ConfigSubsection, ConfigSelection, config
+# -*- coding: utf-8 -*-
+from Components.config import ConfigNumber, ConfigYesNo, ConfigSubsection, ConfigSelection, config
 
 
 def InitRecordingConfig():

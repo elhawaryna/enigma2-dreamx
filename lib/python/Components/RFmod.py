@@ -1,4 +1,5 @@
-from config import config, ConfigSelection, ConfigSubsection, ConfigOnOff, ConfigSlider, ConfigNothing
+# -*- coding: utf-8 -*-
+from Components.config import config, ConfigSelection, ConfigSubsection, ConfigOnOff, ConfigSlider, ConfigNothing
 from enigma import eRFmod
 from Components.SystemInfo import SystemInfo
 

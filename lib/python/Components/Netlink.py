@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Listen to hotplug events. Can be used to listen for hotplug events and
 # similar things, like network connections being (un)plugged.
 import os
@@ -11,7 +12,7 @@ class NetlinkSocket(socket.socket):
 		self.bind((os.getpid(), -1))
 
 	def parse(self):
-		data = self.recv(512)
+		data = self.recv(512).decode(encoding="utf-8", errors='ignore')
 		event = {}
 		for item in data.split('\x00'):
 			if not item:
@@ -29,7 +30,7 @@ class NetlinkSocket(socket.socket):
 # Quick unit test (you can run this on any Linux machine)
 if __name__ == '__main__':
 	nls = NetlinkSocket()
-	print "socket no:", nls.fileno()
-	while 1:
+	print("socket no:", nls.fileno())
+	while True:
 		for item in nls.parse():
-			print repr(item)
+			print(repr(item))

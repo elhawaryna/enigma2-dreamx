@@ -1,4 +1,5 @@
-from GUIComponent import GUIComponent
+# -*- coding: utf-8 -*-
+from Components.GUIComponent import GUIComponent
 from enigma import eVideoWidget, eSize
 
 

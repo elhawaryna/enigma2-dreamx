@@ -1,19 +1,20 @@
-from GUIComponent import GUIComponent
-from config import KEY_LEFT, KEY_RIGHT, KEY_HOME, KEY_END, KEY_0, KEY_DELETE, KEY_BACKSPACE, KEY_OK, KEY_TOGGLEOW, KEY_ASCII, KEY_TIMEOUT, KEY_NUMBERS, ConfigElement
+# -*- coding: utf-8 -*-
+from Components.GUIComponent import GUIComponent
+from Components.config import KEY_LEFT, KEY_RIGHT, KEY_HOME, KEY_END, KEY_0, KEY_DELETE, KEY_BACKSPACE, KEY_OK, KEY_TOGGLEOW, KEY_ASCII, KEY_TIMEOUT, KEY_NUMBERS, ConfigElement
 from Components.ActionMap import NumberActionMap, ActionMap
 from enigma import eListbox, eListboxPythonConfigContent, eRCInput, eTimer
 from Screens.MessageBox import MessageBox
 from Screens.ChoiceBox import ChoiceBox
-from skin import applySkinFactor, parameters
+from skin import parameters
 
 
 class ConfigList(GUIComponent):
 	def __init__(self, list, session=None):
 		GUIComponent.__init__(self)
 		self.l = eListboxPythonConfigContent()
-		seperation = parameters.get("ConfigListSeperator", applySkinFactor(200))
+		seperation = parameters.get("ConfigListSeperator", 200)
 		self.l.setSeperation(seperation)
-		height, space = parameters.get("ConfigListSlider", applySkinFactor(17, 0))
+		height, space = parameters.get("ConfigListSlider", (17, 0))
 		self.l.setSlider(height, space)
 		self.timer = eTimer()
 		self.list = list
@@ -53,6 +54,10 @@ class ConfigList(GUIComponent):
 	def setCurrentIndex(self, index):
 		if self.instance is not None:
 			self.instance.moveSelectionTo(index)
+
+	def enableAutoNavigation(self, enabled):
+		if self.instance:
+			self.instance.enableAutoNavigation(enabled)
 
 	def invalidateCurrent(self):
 		self.l.invalidateEntry(self.l.getCurrentSelectionIndex())
@@ -160,6 +165,7 @@ class ConfigListScreen:
 		}, -1)  # to prevent left/right overriding the listbox
 
 		self.onChangedEntry = []
+		self.onSave = []
 
 		self["VirtualKB"] = ActionMap(["VirtualKeyboardActions"], {
 			"showVirtualKeyboard": self.KeyText,
@@ -187,7 +193,7 @@ class ConfigListScreen:
 		return self["config"].getCurrent() and self["config"].getCurrent()[0] or ""
 
 	def getCurrentValue(self):
-		return self["config"].getCurrent() and str(self["config"].getCurrent()[1].getText()) or ""
+		return self["config"].getCurrent() and len(self["config"].getCurrent()) > 1 and str(self["config"].getCurrent()[1].getText()) or ""
 
 	def getCurrentDescription(self):
 		return self["config"].getCurrent() and len(self["config"].getCurrent()) > 2 and self["config"].getCurrent()[2] or ""
@@ -195,6 +201,9 @@ class ConfigListScreen:
 	def changedEntry(self):
 		for x in self.onChangedEntry:
 			x()
+
+	def noNativeKeys(self):
+		self["config"].enableAutoNavigation(False)
 
 	def handleInputHelpers(self):
 		if self["config"].getCurrent() is not None and self["config"].getCurrent()[1].__class__.__name__ in ('ConfigText', 'ConfigPassword'):
@@ -273,7 +282,7 @@ class ConfigListScreen:
 		if selection and selection[1].enabled and hasattr(selection[1], "description"):
 			self.session.openWithCallback(
 				self.handleKeyFileCallback, ChoiceBox, selection[0],
-				list=zip(selection[1].description, selection[1].choices),
+				list=list(zip(selection[1].description, selection[1].choices)),
 				selection=selection[1].choices.index(selection[1].value),
 				keys=[]
 			)
@@ -287,6 +296,12 @@ class ConfigListScreen:
 	def saveAll(self):
 		for x in self["config"].list:
 			x[1].save()
+
+	def addSaveNotifier(self, notifier):
+		if callable(notifier):
+			self.onSave.append(notifier)
+		else:
+			raise TypeError("[ConfigList] Error: Notifier must be callable!")
 
 	# keySave and keyCancel are just provided in case you need them.
 	# you have to call them by yourself.

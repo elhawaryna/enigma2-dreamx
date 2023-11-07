@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import sys
 import os
 import time
 import re
 from Tools.HardwareInfo import HardwareInfo
-from SystemInfo import SystemInfo
+from Components.SystemInfo import SystemInfo
+from sys import maxsize, modules, version_info
 from Tools.Directories import fileReadLine
 from subprocess import PIPE, Popen
 
@@ -46,7 +46,7 @@ def getBuildDateString():
 def getUpdateDateString():
 	try:
 		from glob import glob
-		build = [x.split("-")[-2:-1][0][-8:] for x in open(glob("/var/lib/opkg/info/openpli-bootlogo.control")[0], "r") if x.startswith("Version:")][0]
+		driver = [x.split("-")[-2] for x in open(glob("/var/lib/opkg/info/*-dvb-modules-*.control")[0], "r") if x.startswith("Version:")][0]
 		if build.isdigit():
 			return "%s-%s-%s" % (build[:4], build[4:6], build[6:])
 	except:
@@ -66,7 +66,7 @@ def getGStreamerVersionString():
 	try:
 		from glob import glob
 		gst = [x.split("Version: ") for x in open(glob("/var/lib/opkg/info/gstreamer[0-9].[0-9].control")[0], "r") if x.startswith("Version:")][0]
-		return "%s" % gst[1].split("+")[0].replace("\n", "")
+		return "%s" % gst[1].split("+")[0].split("-")[0].replace("\n", "")
 	except:
 		return _("Not Installed")
 
@@ -118,11 +118,11 @@ def getCPUInfoString():
 
 		if not cpu_speed:
 			try:
-				cpu_speed = int(open("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq").read()) / 1000
+				cpu_speed = int(open("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq").read()) // 1000
 			except:
 				try:
 					import binascii
-					cpu_speed = int(int(binascii.hexlify(open('/sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency', 'rb').read()), 16) / 100000000) * 100
+					cpu_speed = int(int(binascii.hexlify(open('/sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency', 'rb').read()), 16) // 100000000) * 100
 				except:
 					cpu_speed = "-"
 
@@ -136,7 +136,7 @@ def getCPUInfoString():
 			temperature = open("/proc/stb/fp/temp_sensor").readline().replace('\n', '')
 		elif os.path.isfile("/sys/devices/virtual/thermal/thermal_zone0/temp"):
 			try:
-				temperature = int(open("/sys/devices/virtual/thermal/thermal_zone0/temp").read().strip()) / 1000
+				temperature = int(open("/sys/devices/virtual/thermal/thermal_zone0/temp").read().strip()) // 1000
 			except:
 				pass
 		elif os.path.isfile("/proc/hisi/msp/pm_cpu"):
@@ -152,10 +152,21 @@ def getCPUInfoString():
 
 
 def getChipSetString():
-	chipset = fileReadLine("/proc/stb/info/chipset", source=MODULE_NAME)
-	if chipset is None:
-		return _("Undefined")
-	return chipset.lower()
+	if HardwareInfo().get_device_name() in ('dm7080', 'dm820'):
+		return "7435"
+	elif HardwareInfo().get_device_name() in ('dm520', 'dm525'):
+		return "73625"
+	elif HardwareInfo().get_device_name() in ('dm900', 'dm920', 'et13000', 'sf5008'):
+		return "7252S"
+	elif HardwareInfo().get_device_name() in ('hd51', 'vs1500', 'h7'):
+		return "7251S"
+	elif HardwareInfo().get_device_name() in ('alien5',):
+		return "S905D"
+	else:
+		chipset = fileReadLine("/proc/stb/info/chipset", source=MODULE_NAME)
+		if chipset is None:
+			return _("Undefined")
+		return str(chipset.lower().replace('\n', '').replace('bcm', '').replace('brcm', '').replace('sti', ''))
 
 def getDVBAPI():
 	if SystemInfo["OLDE2API"]:
@@ -185,12 +196,7 @@ def getDriverInstalledDate():
 
 
 def getPythonVersionString():
-	try:
-		import commands
-		status, output = commands.getstatusoutput("python -V")
-		return output.split(' ')[1]
-	except:
-		return _("unknown")
+	return "%s.%s.%s" % (version_info.major, version_info.minor, version_info.micro)
 
 
 def GetIPsFromNetworkInterfaces():
@@ -198,8 +204,7 @@ def GetIPsFromNetworkInterfaces():
 	import fcntl
 	import struct
 	import array
-	import sys
-	is_64bits = sys.maxsize > 2**32
+	is_64bits = maxsize > 2**32
 	struct_size = 40 if is_64bits else 32
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	max_possible = 8 # initial value
@@ -217,10 +222,10 @@ def GetIPsFromNetworkInterfaces():
 			max_possible *= 2
 		else:
 			break
-	namestr = names.tostring()
+	namestr = names.tobytes()
 	ifaces = []
 	for i in range(0, outbytes, struct_size):
-		iface_name = bytes.decode(namestr[i:i + 16]).split('\0', 1)[0].encode('ascii')
+		iface_name = bytes.decode(namestr[i:i + 16]).split('\0', 1)[0]
 		if iface_name != 'lo':
 			iface_addr = socket.inet_ntoa(namestr[i + 20:i + 24])
 			ifaces.append((iface_name, iface_addr))
@@ -230,7 +235,7 @@ def GetIPsFromNetworkInterfaces():
 def getBoxUptime():
 	try:
 		time = ''
-		f = open("/proc/uptime", "rb")
+		f = open("/proc/uptime", "r")
 		secs = int(f.readline().split('.')[0])
 		f.close()
 		if secs > 86400:
@@ -258,4 +263,4 @@ def getOpenSSLVersion():
 
 
 # For modules that do "from About import about"
-about = sys.modules[__name__]
+about = modules[__name__]

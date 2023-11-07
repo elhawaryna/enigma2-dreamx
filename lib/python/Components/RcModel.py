@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from Tools.HardwareInfo import HardwareInfo
 from Tools.Directories import SCOPE_SKIN, resolveFilename
@@ -14,6 +15,10 @@ class RcModel:
 			if line.startswith(self.model):
 				m, r = line.strip().split()
 				self.RcModels[m] = r
+
+	def rcIsDefault(self):
+		# Default RC can only happen with DMM type remote controls...
+		return False
 
 	def getRcFile(self, ext):
 		# check for rc/type every time so rctype changes will be noticed
