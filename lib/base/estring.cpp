@@ -7,10 +7,12 @@
 #include <map>
 #include <lib/base/eerror.h>
 #include <lib/base/encoding.h>
+#include <lib/base/esimpleconfig.h>
 #include <lib/base/estring.h>
 #include "freesatv2.h"
 #include "big5.h"
 #include "gb18030.h"
+#include <Python.h>
 
 std::string buildShortName( const std::string &str )
 {
@@ -29,6 +31,9 @@ std::string buildShortName( const std::string &str )
 
 void undoAbbreviation(std::string &str1, std::string &str2)
 {
+	if (!eSimpleConfig::getBool("config.epg.joinAbbreviatedEventNames", true))
+		return;
+
 	std::string s1 = str1;
 	std::string s2 = str2;
 
@@ -115,6 +120,34 @@ void undoAbbreviation(std::string &str1, std::string &str2)
 
 	str1 = s1;
 	str2 = s2;
+}
+
+void removePrefixesFromEventName(std::string &name, std::string &description)
+{
+	int eventNamePrefixMode = eSimpleConfig::getInt("config.epg.eventNamePrefixMode", 0);
+	if (eventNamePrefixMode == 0)
+		return;
+
+	const char* titlePrefixes = eSimpleConfig::getString("config.epg.eventNamePrefixes", "").c_str();
+	size_t prefixLength;
+	while ((prefixLength = strcspn(titlePrefixes, "|")))
+	{
+		if (name.size() >= prefixLength && name.find(titlePrefixes, 0, prefixLength) == 0)
+		{
+			// remove the unwanted prefix
+			name.erase(0, prefixLength);
+			// and any subsequent spaces
+			name.erase(0, name.find_first_not_of(" "));
+			if (eventNamePrefixMode == 2)
+			{
+				description += " [";
+				description += std::string(titlePrefixes, prefixLength);
+				description += "]";
+			}
+			break;
+		}
+		titlePrefixes += prefixLength + 1;
+	}
 }
 
 std::string getNum(int val, int sys)
@@ -779,16 +812,19 @@ std::string convertDVBUTF8(const unsigned char *data, int len, int table, int ts
 	if (pconvertedLen)
 		*pconvertedLen = convertedLen;
 
-	if (convertedLen < len)
-		eTrace("[convertDVBUTF8] %d chars converted, and %d chars left..", convertedLen, len-convertedLen);
-	eTrace("[convertDVBUTF8] table=0x%02X twochar=%d output:%s\n", table, useTwoCharMapping, output.c_str());
+	//if (convertedLen < len)
+	//	eTrace("[convertDVBUTF8] %d chars converted, and %d chars left..", convertedLen, len-convertedLen);
+	//eTrace("[convertDVBUTF8] table=0x%02X twochar=%d output:%s\n", table, useTwoCharMapping, output.c_str());
 
-	eTrace("[convertDVBUTF8] table=0x%02X tsid:onid=0x%X:0x%X data[0..14]=%s   output:%s\n",
-		table, (unsigned int)tsidonid >> 16, tsidonid & 0xFFFFU,
-		string_to_hex(std::string((char*)data, len < 15 ? len : 15)).c_str(),
-		output.c_str());
+	//eTrace("[convertDVBUTF8] table=0x%02X tsid:onid=0x%X:0x%X data[0..14]=%s   output:%s\n",
+	//	table, (unsigned int)tsidonid >> 16, tsidonid & 0xFFFFU,
+	//	string_to_hex(std::string((char*)data, len < 15 ? len : 15)).c_str(),
+	//	output.c_str());
 	// replace EIT CR/LF with standard newline:
 	output = replace_all(replace_all(output, "\xC2\x8A", "\n"), "\xEE\x82\x8A", "\n");
+	// remove character emphasis control characters:
+	output = replace_all(replace_all(replace_all(replace_all(output, "\xC2\x86", ""), "\xEE\x82\x86", ""), "\xC2\x87", ""), "\xEE\x82\x87", "");
+
 	return output;
 }
 
@@ -905,6 +941,16 @@ int isUTF8(const std::string &string)
 		}
 	}
 	return 1; // can be UTF8 (or pure ASCII, at least no non-UTF-8 8bit characters)
+}
+
+
+std::string repairUTF8(const char *szIn, int len)
+{
+	Py_ssize_t sz = len;
+	PyObject * pyinput = PyUnicode_DecodeUTF8Stateful(szIn, sz, "ignore", NULL);
+	std::string res = PyUnicode_AsUTF8(pyinput);
+	Py_DECREF(pyinput);
+	return res;
 }
 
 
