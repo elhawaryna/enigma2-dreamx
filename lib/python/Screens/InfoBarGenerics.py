@@ -37,7 +37,7 @@ from Screens.UnhandledKey import UnhandledKey
 from ServiceReference import ServiceReference, isPlayableForCur
 
 from Tools.ASCIItranslit import legacyEncode
-from Tools.Directories import fileExists, fileReadLines, fileReadLinesISO, getRecordingFilename, moveFiles
+from Tools.Directories import fileExists, fileReadLines, fileWriteLines, fileReadLinesISO, getRecordingFilename, moveFiles
 from keyids import KEYFLAGS, KEYIDS, KEYIDNAMES
 from Tools.Notifications import AddPopup, AddNotificationWithCallback, current_notifications, lock, notificationAdded, notifications, RemovePopup
 from Tools.HardwareInfo import HardwareInfo
@@ -209,6 +209,60 @@ def getActiveSubservicesForCurrentChannel(service):
 
 def hasActiveSubservicesForCurrentChannel(service):
 	return bool(getActiveSubservicesForCurrentChannel(service))
+
+
+class InfoBarStreamRelay:
+
+	FILENAME = "/etc/enigma2/whitelist_streamrelay"
+
+	def __init__(self) -> None:
+		self.streamRelay = fileReadLines(self.FILENAME, default=[], source=self.__class__.__name__)
+
+	def check(self, nav, service):
+		return (service or nav.getCurrentlyPlayingServiceReference()) and service.toString() in self.streamRelay
+
+	def write(self):
+		fileWriteLines(self.FILENAME, self.streamRelay, source=self.__class__.__name__)
+
+	def toggle(self, nav, service):
+		if isinstance(service, list):
+			serviceList = service
+			for service in serviceList:
+				servicestring = service.toString()
+				if servicestring in self.streamRelay:
+					self.streamRelay.remove(servicestring)
+				else:
+					self.streamRelay.append(servicestring)
+			self.write()
+		else:
+			service = service or nav.getCurrentlyPlayingServiceReference()
+			if service:
+				servicestring = service.toString()
+				if servicestring in self.streamRelay:
+					self.streamRelay.remove(servicestring)
+				else:
+					self.streamRelay.append(servicestring)
+					if nav.getCurrentlyPlayingServiceReference() == service:
+						nav.restartService()
+				self.write()
+
+	def streamrelayChecker(self, playref):
+		playrefstring = playref.toString()
+		if "%3a//" not in playrefstring and playrefstring in self.streamRelay:
+			url = f'http://{".".join("%d" % d for d in config.misc.softcam_streamrelay_url.value)}:{config.misc.softcam_streamrelay_port.value}/'
+			if "127.0.0.1" in url:
+				playrefmod = ":".join([("%x" % (int(x[1], 16) + 1)).upper() if x[0] == 6 else x[1] for x in enumerate(playrefstring.split(':'))])
+			else:
+				playrefmod = playrefstring
+			playref = eServiceReference("%s%s%s:%s" % (playrefmod, url.replace(":", "%3a"), playrefstring.replace(":", "%3a"), ServiceReference(playref).getServiceName()))
+			print(f"[{self.__class__.__name__} Play service {playref.toString()} via streamrelay")
+		return playref
+
+	def checkService(self, service):
+		return service and service.toString() in self.streamRelay
+
+
+streamrelay = InfoBarStreamRelay()
 
 
 class InfoBarDish:
@@ -557,6 +611,12 @@ class InfoBarShowHide(InfoBarScreenSaver):
 				whitelist.vbi.append(service)
 			open('/etc/enigma2/whitelist_vbi', 'w').write('\n'.join(whitelist.vbi))
 			self.showHideVBI()
+
+	def checkStreamrelay(self, service=None):
+		return streamrelay.check(self.session.nav, service)
+
+	def ToggleStreamrelay(self, service=None):
+		streamrelay.toggle(self.session.nav, service)
 
 
 class BufferIndicator(Screen):
@@ -2293,7 +2353,36 @@ class InfoBarTimeshift:
 			self.ts_current_event_timer.startLongTimer(duration)
 
 
-from Screens.PiPSetup import PiPSetup
+class ExtensionsList(ChoiceBox):
+	def __init__(self, session, clist, keys, refresh_list):
+		ChoiceBox.__init__(self, session, title=_("Please choose an extension..."), list=clist, keys=keys, skin_name="ExtensionsList", reorderConfig="extension_order", windowTitle=_("Extensions menu"))
+		if refresh_list:
+			self.refresh_timer = eTimer()
+			self.refresh_timer.callback.append(self.update_list)
+			self.refresh_timer.start(1000)
+
+	def update_list(self):
+		updated = False
+		removed = []
+		for idx, x in enumerate(self.list):
+			text = x[0][1][0]()
+			if x[0][0] != text:  # Update text if changed
+				x[0] = (text, *x[0][1:])
+				x[1] = x[1][:7] + (text,)
+				self.summarylist[idx] = (self.summarylist[idx][0], text)
+				updated = True
+			elif not x[0][1][2]():  # Remove job if not active
+				updated = True
+				removed.append(idx)
+		if updated:
+			for idx, x in enumerate(removed):
+				del self.list[x - idx]
+				del self.summarylist[x - idx]
+			self["list"].setList(self.list)
+			self.updateSummary(self["list"].getSelectionIndex())
+			if removed:
+				for f in self.onLayoutFinish:  # For screen resize
+					exec(f)
 
 
 class InfoBarExtensions:
@@ -2331,7 +2420,7 @@ class InfoBarExtensions:
 
 	def updateExtension(self, extension, key=None):
 		self.extensionsList.append(extension)
-		if key is not None and key in self.extensionKeys:
+		if key not in (None, "refresh") and key in self.extensionKeys:
 			key = None
 
 		if key is None:
@@ -2359,20 +2448,19 @@ class InfoBarExtensions:
 		self.updateExtensions()
 		extensionsList = self.extensionsList[:]
 		keys = []
-		list = []
+		clist = []
 		for x in self.availableKeys:
 			if x in self.extensionKeys:
 				entry = self.extensionKeys[x]
 				extension = self.extensionsList[entry]
 				if extension[2]():
-					name = str(extension[0]())
-					list.append((extension[0](), extension))
+					clist.append((extension[0](), extension))
 					keys.append(x)
 					extensionsList.remove(extension)
 				else:
 					extensionsList.remove(extension)
-		list.extend([(x[0](), x) for x in extensionsList])
-		list and self.session.openWithCallback(self.extensionCallback, ChoiceBox, title=_("Please choose an extension..."), list=list, keys=keys, skin_name="ExtensionsList", reorderConfig="extension_order", windowTitle=_("Extensions menu"))
+		clist.extend([(x[0](), x) for x in extensionsList])
+		clist and self.session.openWithCallback(self.extensionCallback, ExtensionsList, clist=clist, keys=keys, refresh_list="refresh" in self.extensionKeys)
 
 	def extensionCallback(self, answer):
 		if answer is not None:
@@ -2419,7 +2507,7 @@ class InfoBarJobman:
 		self.addExtension(extension=self.getJobList, type=InfoBarExtensions.EXTENSION_LIST)
 
 	def getJobList(self):
-		return [((boundFunction(self.getJobName, job), boundFunction(self.showJobView, job), lambda: True), None) for job in job_manager.getPendingJobs()]
+		return [((boundFunction(self.getJobName, job), boundFunction(self.showJobView, job), boundFunction(self.isActiveJob, job)), "refresh") for job in job_manager.getPendingJobs()]
 
 	def getJobName(self, job):
 		if job.status == job.IN_PROGRESS:
@@ -2431,8 +2519,14 @@ class InfoBarJobman:
 		job_manager.in_background = False
 		self.session.openWithCallback(self.JobViewCB, JobView, job)
 
+	def isActiveJob(self, job):
+		return job.status in (job.IN_PROGRESS, job.NOT_STARTED)
+
 	def JobViewCB(self, in_background):
 		job_manager.in_background = in_background
+
+
+from Screens.PiPSetup import PiPSetup
 
 # depends on InfoBarExtensions
 
