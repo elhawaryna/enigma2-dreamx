@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Components.ActionMap import ActionMap
 from Components.Sources.StaticText import StaticText
 from Components.Label import Label
@@ -8,18 +9,19 @@ from Components.TimerSanityCheck import TimerSanityCheck
 from Components.UsageConfig import preferredTimerPath, dropEPGNewLines, replaceEPGSeparator
 from Components.Button import Button
 from RecordTimer import RecordTimerEntry, parseEvent, AFTEREVENT, createRecordTimerEntry
-from Screen import Screen
+from Screens.Screen import Screen
 from Screens.ChoiceBox import ChoiceBox
 from Screens.MessageBox import MessageBox
 from Screens.InputBox import PinInput
 from ServiceReference import ServiceReference
-from TimerEntry import TimerEntry, TimerLog
+from Screens.TimerEntry import TimerEntry, TimerLog
 from Tools.BoundFunction import boundFunction
 from Tools.FallbackTimer import FallbackTimerList
 from time import time
 from timer import TimerEntry as RealTimerEntry
 from ServiceReference import ServiceReference
 from enigma import eServiceReference, eEPGCache
+import functools
 
 
 class TimerEditList(Screen):
@@ -117,18 +119,18 @@ class TimerEditList(Screen):
 				if t.disabled and t.repeated and stateRunning and not t.justplay:
 					return
 				if t.disabled:
-					print "[TimerEditList] try to ENABLE timer"
+					print("[TimerEditList] try to ENABLE timer")
 					t.enable()
 					timersanitycheck = TimerSanityCheck(self.session.nav.RecordTimer.timer_list, cur)
 					if not timersanitycheck.check():
 						t.disable()
-						print "[TimerEditList] sanity check failed"
+						print("[TimerEditList] sanity check failed")
 						simulTimerList = timersanitycheck.getSimulTimerList()
 						if simulTimerList is not None:
 							self.session.openWithCallback(self.finishedEdit, TimerSanityConflict, simulTimerList)
 							timer_changed = False
 					else:
-						print "[TimerEditList] sanity check passed"
+						print("[TimerEditList] sanity check passed")
 						if timersanitycheck.doubleCheck():
 							t.disable()
 				else:
@@ -192,7 +194,7 @@ class TimerEditList(Screen):
 					else:
 						text = ext_description
 			if not cur.conflict_detection:
-				text = _("\nConflict detection disabled!") + "\n\n" + text
+				text = _("Conflict detection disabled!") + "\n\n" + text
 			self["description"].setText(text)
 			stateRunning = cur.state in (1, 2)
 			if cur.state == 2 and self.key_red_choice != self.STOP:
@@ -252,8 +254,8 @@ class TimerEditList(Screen):
 
 		def eol_compare(x, y):
 			if x[0].state != y[0].state and x[0].state == RealTimerEntry.StateEnded or y[0].state == RealTimerEntry.StateEnded:
-				return cmp(x[0].state, y[0].state)
-			return cmp(x[0].begin, y[0].begin)
+				return (x[0].state > y[0].state) - (x[0].state < y[0].state)
+			return (x[0].begin > y[0].begin) - (x[0].begin < y[0].begin)
 
 		self.list = []
 		if self.fallbackTimer.list:
@@ -263,7 +265,7 @@ class TimerEditList(Screen):
 		self.list.extend([(timer, True) for timer in self.session.nav.RecordTimer.processed_timers])
 
 		if config.usage.timerlist_finished_timer_position.index: #end of list
-			self.list.sort(cmp=eol_compare)
+			self.list.sort(key=functools.cmp_to_key(eol_compare))
 		else:
 			self.list.sort(key=lambda x: x[0].begin)
 		self["timerlist"].l.setList(self.list)
@@ -346,7 +348,7 @@ class TimerEditList(Screen):
 		self.session.openWithCallback(self.finishedAdd, TimerEntry, timer)
 
 	def finishedEdit(self, answer):
-		print "[TimerEditList] finished edit"
+		print("[TimerEditList] finished edit")
 		if answer[0]:
 			entry = answer[1]
 			if entry.external_prev != entry.external:
@@ -383,12 +385,12 @@ class TimerEditList(Screen):
 				else:
 					success = True
 				if success:
-					print "[TimerEditList] sanity check passed"
+					print("[TimerEditList] sanity check passed")
 					self.session.nav.RecordTimer.timeChanged(entry)
 				self.fillTimerList()
 
 	def finishedAdd(self, answer):
-		print "[TimerEditList] finished add"
+		print("[TimerEditList] finished add")
 		if answer[0]:
 			entry = answer[1]
 			if entry.external:
@@ -465,7 +467,7 @@ class TimerSanityConflict(Screen):
 			return 0
 
 	def editTimerCallBack(self, answer=None):
-		if answer and len(answer) > 1 and answer[0] is True:
+		if answer and len(answer) > 1 and answer[0] == True:
 			self.session.nav.RecordTimer.timeChanged(answer[1])
 			if not answer[1].disabled:
 				if not self.isResolvedConflict(answer[1]):

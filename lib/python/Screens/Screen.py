@@ -1,4 +1,5 @@
-from enigma import eRCInput, eTimer, eWindow  # , getDesktop
+# -*- coding: utf-8 -*-
+from enigma import eRCInput, eTimer, eWindow , getDesktop
 
 from skin import GUI_SKIN_ID, applyAllAttributes
 from Components.config import config
@@ -7,10 +8,10 @@ from Components.Sources.Source import Source
 from Components.Sources.StaticText import StaticText
 from Tools.CList import CList
 
+
 # The lines marked DEBUG: are proposals for further fixes or improvements.
 # Other commented out code is historic and should probably be deleted if it is not going to be used.
-
-
+#
 class Screen(dict):
 	NO_SUSPEND, SUSPEND_STOPS, SUSPEND_PAUSES = range(3)
 	ALLOW_SUSPEND = NO_SUSPEND
@@ -70,7 +71,7 @@ class Screen(dict):
 					return
 			# assert self.session is None, "a screen can only exec once per time"
 			# self.session = session
-			for val in self.values() + self.renderer:
+			for val in list(self.values()) + self.renderer:
 				val.execBegin()
 				# DEBUG: if not self.standAlone and self.session.current_dialog != self:
 				if not self.stand_alone and self.session.current_dialog != self:
@@ -103,7 +104,7 @@ class Screen(dict):
 		for val in self.renderer:
 			val.disconnectAll()  # Disconnect converter/sources and probably destroy them. Sources will not be destroyed.
 		del self.session
-		for (name, val) in self.items():
+		for (name, val) in list(self.items()):
 			val.destroy()
 			del self[name]
 		self.renderer = []
@@ -126,7 +127,7 @@ class Screen(dict):
 		self.instance.show()
 		for x in self.onShow:
 			x()
-		for val in self.values() + self.renderer:
+		for val in list(self.values()) + self.renderer:
 			if isinstance(val, GUIComponent) or isinstance(val, Source):
 				val.onShow()
 
@@ -137,9 +138,15 @@ class Screen(dict):
 		self.instance.hide()
 		for x in self.onHide:
 			x()
-		for val in self.values() + self.renderer:
+		for val in list(self.values()) + self.renderer:
 			if isinstance(val, GUIComponent) or isinstance(val, Source):
 				val.onHide()
+
+	def isAlreadyShown(self):  # Already shown is false until the screen is really shown (after creation).
+		return self.already_shown
+
+	def isStandAlone(self):  # Stand alone screens (for example web screens) don't care about having or not having focus.
+		return self.stand_alone
 
 	def getScreenPath(self):
 		return self.screenPath
@@ -218,15 +225,14 @@ class Screen(dict):
 		self.__callLaterTimer.start(0, True)
 
 	def applySkin(self):
-		# DEBUG: baseRes = (getDesktop(GUI_SKIN_ID).size().width(), getDesktop(GUI_SKIN_ID).size().height())
-		baseRes = (720, 576)  # FIXME: A skin might have set another resolution, which should be the base res.
+		bounds = (getDesktop(GUI_SKIN_ID).size().width(), getDesktop(GUI_SKIN_ID).size().height())
+		resolution = bounds
 		zPosition = 0
 		for (key, value) in self.skinAttributes:
-			if key == "baseResolution":
-				baseRes = tuple([int(x) for x in value.split(",")])
+			if key == "resolution":
+				resolution = tuple([int(x.strip()) for x in value.split(",")])
 			elif key == "zPosition":
 				zPosition = int(value)
-		self.scale = ((baseRes[0], baseRes[0]), (baseRes[1], baseRes[1]))
 		if not self.instance:
 			self.instance = eWindow(self.desktop, zPosition)
 		if "title" not in self.skinAttributes and self.screenTitle:
@@ -235,7 +241,7 @@ class Screen(dict):
 			for attribute in self.skinAttributes:
 				if attribute[0] == "title":
 					self.setTitle(_(attribute[1]))
-		self.skinAttributes.sort(key=lambda a: {"position": 1}.get(a[0], 0))  # We need to make sure that certain attributes come last.
+		self.scale = ((bounds[0], resolution[0]), (bounds[1], resolution[1]))
 		applyAllAttributes(self.instance, self.desktop, self.skinAttributes, self.scale)
 		self.createGUIScreen(self.instance, self.desktop)
 
@@ -265,8 +271,8 @@ class Screen(dict):
 			applyAllAttributes(w.instance, desktop, w.skinAttributes, self.scale)
 		for f in self.onLayoutFinish:
 			if not isinstance(f, type(self.close)):
-				exec f in globals(), locals()  # Python 2
-				# exec(f, globals(), locals())  # Python 3
+				# exec f in globals(), locals()  # Python 2
+				exec(f, globals(), locals())  # Python 3
 			else:
 				f()
 
@@ -279,21 +285,21 @@ class Screen(dict):
 		return None
 
 	def addSummary(self, summary):
-		if summary is not None:
+		if summary is not None and summary not in self.summaries:
 			self.summaries.append(summary)
 
 	def removeSummary(self, summary):
-		if summary is not None:
+		if summary is not None and summary in self.summaries:
 			self.summaries.remove(summary)
 
 
 class ScreenSummary(Screen):
 	skin = """
 	<screen position="fill" flags="wfNoBorder">
-		<widget source="global.CurrentTime" render="Label" position="0,0" size="e,20" font="Regular;16" halign="center" valign="center">
+		<widget source="global.CurrentTime" render="Label" position="0,0" size="e,20" font="Regular;16" horizontalAlignment="center" verticalAlignment="center">
 			<convert type="ClockToText">WithSeconds</convert>
 		</widget>
-		<widget source="Title" render="Label" position="0,25" size="e,45" font="Regular;18" halign="center" valign="center" />
+		<widget source="Title" render="Label" position="0,25" size="e,45" font="Regular;18" horizontalAlignment="center" verticalAlignment="center" />
 	</screen>"""
 
 	def __init__(self, session, parent):

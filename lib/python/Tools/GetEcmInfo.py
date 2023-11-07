@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import time
 
@@ -31,7 +32,7 @@ class GetEcmInfo:
 			info['ecminterval1'] = oecmi0
 			old_ecm_time = ecm_time
 			try:
-				ecm = open(ECM_INFO, 'rb').readlines()
+				ecm = open(ECM_INFO, 'r').readlines()
 			except:
 				ecm = ''
 			for line in ecm:
@@ -79,7 +80,7 @@ class GetEcmInfo:
 					if info['decode'] == 'Network':
 						cardid = 'id:' + info.get('prov', '')
 						try:
-							share = open('/tmp/share.info', 'rb').readlines()
+							share = open('/tmp/share.info', 'r').readlines()
 							for line in share:
 								if cardid in line:
 									self.textvalue = line.strip()

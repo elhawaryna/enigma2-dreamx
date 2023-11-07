@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 from Components.SystemInfo import SystemInfo
 from Components.Console import Console
+from Tools.Directories import fileHas, fileExists
 import os
 import glob
 import tempfile
+import subprocess
 
 
 class tmp:
@@ -11,14 +14,18 @@ class tmp:
 
 def getMultibootStartupDevice():
 	tmp.dir = tempfile.mkdtemp(prefix="Multiboot")
-	for device in ('/dev/block/by-name/bootoptions', '/dev/mmcblk0p1', '/dev/mmcblk1p1', '/dev/mmcblk0p3', '/dev/mmcblk0p4'):
+	if SystemInfo["hasKexec"]: # kexec kernel multiboot
+		bootList = ("/dev/mmcblk0p4", "/dev/mmcblk0p7", "/dev/mmcblk0p9")
+	else: #legacy multiboot
+		bootList = ("/dev/mmcblk0p1", "/dev/mmcblk1p1", "/dev/mmcblk0p3", "/dev/mmcblk0p4", "/dev/mtdblock2", "/dev/block/by-name/bootoptions")
+	for device in bootList:
 		if os.path.exists(device):
 			if os.path.exists("/dev/block/by-name/flag"):
 				Console().ePopen('mount --bind %s %s' % (device, tmp.dir))
 			else:
 				Console().ePopen('mount %s %s' % (device, tmp.dir))
 			if os.path.isfile(os.path.join(tmp.dir, "STARTUP")):
-				print '[Multiboot] Startupdevice found:', device
+				print('[Multiboot] Startupdevice found:', device)
 				return device
 			Console().ePopen('umount %s' % tmp.dir)
 	if not os.path.ismount(tmp.dir):
@@ -44,7 +51,11 @@ def getMultibootslots():
 				for line in open(file).readlines():
 					if 'root=' in line:
 						device = getparam(line, 'root')
-						if os.path.exists(device):
+						if "UUID=" in device:
+							slotx = str(getUUIDtoSD(device))
+							if slotx is not None:
+								device = slotx
+						if os.path.exists(device) or device == 'ubi0:ubifs':
 							slot['device'] = device
 							slot['startupfile'] = os.path.basename(file)
 							if 'rootsubdir' in line:
@@ -59,20 +70,25 @@ def getMultibootslots():
 			#the boot device has ancient content and does not contain the correct STARTUP files
 			for slot in range(1, 5):
 				bootslots[slot] = {'device': '/dev/mmcblk0p%s' % (slot * 2 + 1), 'startupfile': None}
-	print '[Multiboot] Bootslots found:', bootslots
+	print('[Multiboot] Bootslots found:', bootslots)
 	return bootslots
 
 
 def getCurrentImage():
 	if SystemInfo["canMultiBoot"]:
-		slot = [x[-1] for x in open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().split() if x.startswith('rootsubdir')]
-		if slot:
-			return int(slot[0])
-		else:
-			device = getparam(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read(), 'root')
-			for slot in SystemInfo["canMultiBoot"].keys():
-				if SystemInfo["canMultiBoot"][slot]['device'] == device:
-					return slot
+		if SystemInfo["hasKexec"]:	# kexec kernel multiboot
+			rootsubdir = [x for x in open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().split() if x.startswith("rootsubdir")]
+			char = "/" if "/" in rootsubdir[0] else "="
+			return int(rootsubdir[0].rsplit(char, 1)[1][11:])
+		else: #legacy multiboot
+			slot = [x[-1] for x in open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().split() if x.startswith('rootsubdir')]
+			if slot:
+				return int(slot[0])
+			else:
+				device = getparam(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read(), 'root')
+				for slot in SystemInfo["canMultiBoot"].keys():
+					if SystemInfo["canMultiBoot"][slot]['device'] == device:
+						return slot
 
 
 def getCurrentImageMode():
@@ -102,12 +118,26 @@ def restoreImages():
 			os.rmdir(tmp.dir)
 
 
+def getUUIDtoSD(UUID): # returns None on failure
+	check = "/sbin/blkid"
+	if fileExists(check):
+		lines = subprocess.check_output([check]).decode(encoding="utf8", errors="ignore").split("\n")
+		for line in lines:
+			if UUID in line.replace('"', ''):
+				return line.split(":")[0].strip()
+	else:
+		return None
+
+
 def getImagelist():
 	imagelist = {}
 	if SystemInfo["canMultiBoot"]:
 		tmp.dir = tempfile.mkdtemp(prefix="Multiboot")
 		for slot in sorted(SystemInfo["canMultiBoot"].keys()):
-			Console().ePopen('mount %s %s' % (SystemInfo["canMultiBoot"][slot]['device'], tmp.dir))
+			if SystemInfo["canMultiBoot"][slot]['device'] == 'ubi0:ubifs':
+				Console().ePopen('mount -t ubifs %s %s' % (SystemInfo["canMultiBoot"][slot]['device'], tmp.dir))
+			else:
+				Console().ePopen('mount %s %s' % (SystemInfo["canMultiBoot"][slot]['device'], tmp.dir))
 			imagedir = os.sep.join(filter(None, [tmp.dir, SystemInfo["canMultiBoot"][slot].get('rootsubdir', '')]))
 			if os.path.isfile(os.path.join(imagedir, 'usr/bin/enigma2')):
 				try:

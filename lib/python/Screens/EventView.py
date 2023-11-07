@@ -1,11 +1,11 @@
-from Screen import Screen
+# -*- coding: utf-8 -*-
+from Screens.Screen import Screen
 from Screens.TimerEdit import TimerSanityConflict
 from Screens.ChoiceBox import ChoiceBox
 from Components.ActionMap import ActionMap
 from Components.Label import Label
 from Components.ScrollLabel import ScrollLabel
 from Components.PluginComponent import plugins
-from Components.TimerList import TimerList
 from Components.UsageConfig import preferredTimerPath, dropEPGNewLines, replaceEPGSeparator
 from Components.Sources.ServiceEvent import ServiceEvent
 from Components.Sources.StaticText import StaticText
@@ -13,7 +13,7 @@ from Components.Sources.Event import Event
 from Components.Button import Button
 from enigma import eEPGCache, eTimer, eServiceReference
 from RecordTimer import RecordTimerEntry, parseEvent, AFTEREVENT, createRecordTimerEntry
-from TimerEntry import TimerEntry
+from Screens.TimerEntry import TimerEntry
 from Plugins.Plugin import PluginDescriptor
 from Tools.BoundFunction import boundFunction
 from Tools.FallbackTimer import FallbackTimerList
@@ -29,7 +29,7 @@ class EventViewBase:
 		self.similarEPGCB = similarEPGCB
 		self.cbFunc = callback
 		self.currentService = Ref
-		self.isRecording = (not Ref.ref.flags & eServiceReference.isGroup) and Ref.ref.getPath()
+		self.isRecording = (not Ref.ref.flags & eServiceReference.isGroup and Ref.ref.getPath()) and "%3a//" not in Ref.ref.toString()
 		self.event = event
 		self["Service"] = ServiceEvent()
 		self["Event"] = Event()
@@ -75,8 +75,9 @@ class EventViewBase:
 				"nextEvent": self.nextEvent,
 				"timerAdd": self.timerAdd,
 				"openSimilarList": self.openSimilarList,
+				"openPartialList": self.open_partial_list,
 				"contextMenu": self.doContext,
-			})
+			}, 1)
 		if parent and hasattr(parent, "fallbackTimer"):
 			self.fallbackTimer = parent.fallbackTimer
 			self.onLayoutFinish.append(self.onCreate)
@@ -183,7 +184,7 @@ class EventViewBase:
 						self.key_green_choice = self.ADD_TIMER
 
 	def finishedAdd(self, answer):
-		print "finished add"
+		print("finished add")
 		if answer[0]:
 			entry = answer[1]
 			if entry.external:
@@ -218,7 +219,7 @@ class EventViewBase:
 		else:
 			self["key_green"].setText(_("Add timer"))
 			self.key_green_choice = self.ADD_TIMER
-			print "Timeredit aborted"
+			print("Timeredit aborted")
 
 	def finishSanityCorrection(self, answer):
 		self.finishedAdd(answer)
@@ -234,14 +235,6 @@ class EventViewBase:
 				self["channel"].setText(name)
 			else:
 				self["channel"].setText(_("unknown service"))
-
-	def sort_func(self, x, y):
-		if x[1] < y[1]:
-			return -1
-		elif x[1] == y[1]:
-			return 0
-		else:
-			return 1
 
 	def setEvent(self, event):
 		self.event = event
@@ -315,15 +308,16 @@ class EventViewBase:
 		ret = epgcache.search(('NB', 100, eEPGCache.SIMILAR_BROADCASTINGS_SEARCH, refstr, id))
 		if ret is not None:
 			text = '\n\n' + _('Similar broadcasts:')
-			ret.sort(self.sort_func)
-			for x in ret:
+			for x in sorted(ret, key=lambda x: x[1]):
 				text += "\n%s  -  %s" % (strftime(config.usage.date.long.value + ", " + config.usage.time.short.value, localtime(x[1])), x[0])
 
 			descr = self["epg_description"]
 			descr.setText(descr.getText() + text)
 			descr = self["FullDescription"]
 			descr.setText(descr.getText() + text)
-			self["key_red"].setText(_("Similar"))
+			self["key_red"].text = _("Similar")
+		if not self["key_yellow"].text:
+			self["key_yellow"].text = _("Partial")
 
 	def openSimilarList(self):
 		if self.similarEPGCB is not None and self["key_red"].getText():
@@ -332,12 +326,18 @@ class EventViewBase:
 			if id is not None:
 				self.similarEPGCB(id, refstr)
 
+	def open_partial_list(self):
+		if self.similarEPGCB:
+			event = self.event and self.event.getEventName()
+			if event:
+				self.similarEPGCB(event, None)
+
 	def doContext(self):
 		if self.event:
 			text = _("Select action")
 			menu = [(p.name, boundFunction(self.runPlugin, p)) for p in plugins.getPlugins(where=PluginDescriptor.WHERE_EVENTINFO)
-				if 'servicelist' not in p.__call__.func_code.co_varnames
-					if 'selectedevent' not in p.__call__.func_code.co_varnames]
+				if 'servicelist' not in p.fnc.__code__.co_varnames
+					if 'selectedevent' not in p.fnc.__code__.co_varnames]
 			if len(menu) == 1:
 				menu and menu[0][1]()
 			elif len(menu) > 1:

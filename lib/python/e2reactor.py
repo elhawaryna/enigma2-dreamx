@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # enigma2 reactor: based on pollreactor, which is
 # Copyright (c) 2001-2004 Twisted Matrix Laboratories.
 # See LICENSE for details.
@@ -135,7 +136,7 @@ class PollReactor(posixbase.PosixReactorBase):
 
 		if self.waker is not None:
 			self.addReader(self.waker)
-		return result
+		return list(result)
 
 	def doPoll(self, timeout,
 			reads=reads,
@@ -156,7 +157,7 @@ class PollReactor(posixbase.PosixReactorBase):
 				if self.running:
 					self.stop()
 				l = []
-		except select.error, e:
+		except select.error as e:
 			if e[0] == errno.EINTR:
 				return
 			else:

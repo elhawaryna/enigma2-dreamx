@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Components.ConfigList import ConfigListScreen
 from Components.ActionMap import ActionMap
-from Components.config import ConfigSelection, getConfigListEntry, ConfigAction
+from Components.config import ConfigSelection, ConfigAction
 from Components.ScrollLabel import ScrollLabel
 from Tools.Directories import resolveFilename, SCOPE_PLUGINS
 from Tools.GetEcmInfo import GetEcmInfo
@@ -19,12 +20,12 @@ class SoftcamSetup(Screen, ConfigListScreen):
 		<screen name="SoftcamSetup" position="center,center" size="560,550" >
 			<widget name="config" position="5,10" size="550,180" />
 			<widget name="info" position="5,200" size="550,340" font="Fixed;18" />
-			<ePixmap name="red" position="0,510" zPosition="1" size="140,40" pixmap="buttons/red.png" transparent="1" alphatest="on" />
-			<ePixmap name="green" position="140,510" zPosition="1" size="140,40" pixmap="buttons/green.png" transparent="1" alphatest="on" />
-			<widget objectTypes="key_red,StaticText" source="key_red" render="Label" position="0,510" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
-			<widget objectTypes="key_green,StaticText" source="key_green" render="Label" position="140,510" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
-			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Label"  position="420,510" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
-			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Pixmap" pixmap="buttons/blue.png"  position="420,510" zPosition="1" size="140,40" transparent="1" alphatest="on">
+			<ePixmap name="red" position="0,510" zPosition="1" size="140,40" pixmap="buttons/red.png" transparent="1" alphaTest="on" />
+			<ePixmap name="green" position="140,510" zPosition="1" size="140,40" pixmap="buttons/green.png" transparent="1" alphaTest="on" />
+			<widget objectTypes="key_red,StaticText" source="key_red" render="Label" position="0,510" zPosition="2" size="140,40" verticalAlignment="center" horizontalAlignment="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
+			<widget objectTypes="key_green,StaticText" source="key_green" render="Label" position="140,510" zPosition="2" size="140,40" verticalAlignment="center" horizontalAlignment="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
+			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Label"  position="420,510" zPosition="2" size="140,40" verticalAlignment="center" horizontalAlignment="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
+			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Pixmap" pixmap="buttons/blue.png"  position="420,510" zPosition="1" size="140,40" transparent="1" alphaTest="on">
 				<convert type="ConditionalShowHide"/>
 			</widget>
 		</screen>"""
@@ -33,12 +34,12 @@ class SoftcamSetup(Screen, ConfigListScreen):
 		<screen name="SoftcamSetup" position="485,center" size="951,860" >
 			<widget name="config" position="5,10" size="941,180" font="Fixed;28" itemHeight="32" />
 			<widget name="info" position="5,200" size="941,500" font="Fixed;32" />
-			<ePixmap name="red" position="0,819" zPosition="1" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
-			<ePixmap name="green" position="140,819" zPosition="1" size="141,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
-			<widget objectTypes="key_red,StaticText" source="key_red" render="Label" position="0,819" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;28" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
-			<widget objectTypes="key_green,StaticText" source="key_green" render="Label" position="140,819" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;28" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
-			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Label"  position="809,819" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;28" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
-			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Pixmap" pixmap="skin_default/buttons/blue.png"  position="809,819" zPosition="1" size="140,40" transparent="1" alphatest="on">
+			<ePixmap name="red" position="0,819" zPosition="1" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphaTest="on" />
+			<ePixmap name="green" position="140,819" zPosition="1" size="141,40" pixmap="skin_default/buttons/green.png" transparent="1" alphaTest="on" />
+			<widget objectTypes="key_red,StaticText" source="key_red" render="Label" position="0,819" zPosition="2" size="140,40" verticalAlignment="center" horizontalAlignment="center" font="Regular;28" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
+			<widget objectTypes="key_green,StaticText" source="key_green" render="Label" position="140,819" zPosition="2" size="140,40" verticalAlignment="center" horizontalAlignment="center" font="Regular;28" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
+			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Label"  position="809,819" zPosition="2" size="140,40" verticalAlignment="center" horizontalAlignment="center" font="Regular;28" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
+			<widget objectTypes="key_blue,StaticText" source="key_blue" render="Pixmap" pixmap="skin_default/buttons/blue.png"  position="809,819" zPosition="1" size="140,40" transparent="1" alphaTest="on">
 				<convert type="ConditionalShowHide"/>
 			</widget>
 		</screen>"""
@@ -76,16 +77,16 @@ class SoftcamSetup(Screen, ConfigListScreen):
 		self.softcams.value = self.softcam.current()
 
 		self.softcams_text = _("Select Softcam")
-		self.list.append(getConfigListEntry(self.softcams_text, self.softcams))
+		self.list.append((self.softcams_text, self.softcams))
 		if cardservers:
 			self.cardservers = ConfigSelection(choices=cardservers)
 			self.cardservers.value = self.cardserver.current()
-			self.list.append(getConfigListEntry(_("Select Card Server"), self.cardservers))
+			self.list.append((_("Select Card Server"), self.cardservers))
 
-		self.list.append(getConfigListEntry(_("Restart softcam"), ConfigAction(self.restart, "s")))
+		self.list.append((_("Restart softcam"), ConfigAction(self.restart, "s")))
 		if cardservers:
-			self.list.append(getConfigListEntry(_("Restart cardserver"), ConfigAction(self.restart, "c")))
-			self.list.append(getConfigListEntry(_("Restart both"), ConfigAction(self.restart, "sc")))
+			self.list.append((_("Restart cardserver"), ConfigAction(self.restart, "c")))
+			self.list.append((_("Restart both"), ConfigAction(self.restart, "sc")))
 
 		self["key_red"] = StaticText(_("Cancel"))
 		self["key_green"] = StaticText(_("OK"))
@@ -109,16 +110,16 @@ class SoftcamSetup(Screen, ConfigListScreen):
 
 	def ppanelShortcut(self):
 		ppanelFileName = '/etc/ppanels/' + self.softcams.value + '.xml'
-		if "oscam" in self.softcams.value.lower() and os.path.isfile(resolveFilename(SCOPE_PLUGINS, 'Extensions/OscamStatus/plugin.pyo')):
+		if "oscam" in self.softcams.value.lower() and os.path.isfile(resolveFilename(SCOPE_PLUGINS, 'Extensions/OscamStatus/plugin.pyc')):
 			from Plugins.Extensions.OscamStatus.plugin import OscamStatus
 			self.session.open(OscamStatus)
-		elif "oscam" or "ncam" in self.softcams.value.lower() and os.path.isfile('/usr/lib/enigma2/python/Screens/OScamInfo.pyo'):
+		elif "oscam" or "ncam" in self.softcams.value.lower() and os.path.isfile('/usr/lib/enigma2/python/Screens/OScamInfo.pyc'):
 			from Screens.OScamInfo import OscamInfoMenu
 			self.session.open(OscamInfoMenu)
-		elif "cccam" in self.softcams.value.lower() and os.path.isfile(resolveFilename(SCOPE_PLUGINS, 'Extensions/CCcamInfo/plugin.pyo')):
+		elif "cccam" in self.softcams.value.lower() and os.path.isfile(resolveFilename(SCOPE_PLUGINS, 'Extensions/CCcamInfo/plugin.pyc')):
 			from Plugins.Extensions.CCcamInfo.plugin import CCcamInfoMain
 			self.session.open(CCcamInfoMain)
-		elif os.path.isfile(ppanelFileName) and os.path.isfile(resolveFilename(SCOPE_PLUGINS, 'Extensions/PPanel/plugin.pyo')):
+		elif os.path.isfile(ppanelFileName) and os.path.isfile(resolveFilename(SCOPE_PLUGINS, 'Extensions/PPanel/plugin.pyc')):
 			from Plugins.Extensions.PPanel.ppanel import PPanel
 			self.session.open(PPanel, name=self.softcams.value + ' PPanel', node=None, filename=ppanelFileName, deletenode=None)
 		else:

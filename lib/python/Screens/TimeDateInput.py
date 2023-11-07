@@ -1,5 +1,6 @@
-from Screen import Screen
-from Components.config import config, ConfigClock, ConfigDateTime, getConfigListEntry
+# -*- coding: utf-8 -*-
+from Screens.Screen import Screen
+from Components.config import config, ConfigClock, ConfigDateTime
 from Components.ActionMap import NumberActionMap
 from Components.ConfigList import ConfigListScreen
 from Components.Sources.StaticText import StaticText
@@ -44,8 +45,8 @@ class TimeDateInput(ConfigListScreen, Screen):
 
 	def createSetup(self, configlist):
 		self.list = [
-			getConfigListEntry(_("Date"), self.timeinput_date),
-			getConfigListEntry(_("Time"), self.timeinput_time)
+			(_("Date"), self.timeinput_date),
+			(_("Time"), self.timeinput_time)
 		]
 		configlist.list = self.list
 		configlist.l.setList(self.list)

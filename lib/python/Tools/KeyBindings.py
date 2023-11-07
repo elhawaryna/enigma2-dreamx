@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from keyids import KEYIDS
 from Components.config import config
 from Components.RcModel import rc_model
@@ -382,7 +383,7 @@ def getKeyDescription(key):
 
 
 def getKeyBindingKeys(filterfn=lambda key: True):
-	return filter(filterfn, keyBindings)
+	return list(filter(filterfn, keyBindings))
 
 # Remove all entries of domain "domain".
 #
@@ -390,4 +391,4 @@ def getKeyBindingKeys(filterfn=lambda key: True):
 
 def removeKeyBindings(domain):
 	for x in keyBindings:
-		keyBindings[x] = filter(lambda e: e[1] != domain, keyBindings[x])
+		keyBindings[x] = [e for e in keyBindings[x] if e[1] != domain]

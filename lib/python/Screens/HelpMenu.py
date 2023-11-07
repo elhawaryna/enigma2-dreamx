@@ -1,4 +1,4 @@
-from __future__ import print_function
+# -*- coding: utf-8 -*-
 from collections import defaultdict
 from sys import maxsize
 from enigma import eActionMap, eListboxPythonMultiContent, eListbox, gFont

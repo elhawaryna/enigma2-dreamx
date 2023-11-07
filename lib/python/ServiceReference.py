@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from enigma import eServiceReference, eServiceCenter, getBestPlayableServiceReference
 import NavigationInstance
 
@@ -60,3 +61,7 @@ def resolveAlternate(ref):
 		if not nref:
 			nref = getBestPlayableServiceReference(ref, eServiceReference(), True)
 	return nref
+
+
+def hdmiInServiceRef():
+	return eServiceReference(eServiceReference.idServiceHDMIIn, eServiceReference.noFlags, eServiceReferenceDVB.dTv)

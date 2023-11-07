@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import os
+import struct
 import RecordTimer
 import Components.ParentalControl
 from Screens.Screen import Screen
@@ -11,11 +13,12 @@ from Components.ImportChannels import ImportChannels
 from Components.SystemInfo import SystemInfo
 from Components.Sources.StreamService import StreamServiceList
 from Components.Task import job_manager
-from Tools.Directories import mediafilesInUse
-from Tools import Notifications
+from Tools.Directories import mediaFilesInUse
+from Tools.Notifications import AddNotification
 from time import time, localtime
 from GlobalActions import globalActionMap
 from enigma import eDVBVolumecontrol, eTimer, eDVBLocalTimeHandler, eServiceReference, eStreamServer, quitMainloop, iRecordableService
+from Tools.HardwareInfo import HardwareInfo
 
 inStandby = None
 infoBarInstance = None
@@ -27,10 +30,11 @@ QUIT_UPGRADE_FP = 4
 QUIT_ERROR_RESTART = 5
 QUIT_DEBUG_RESTART = 6
 QUIT_MANUFACTURER_RESET = 7
-QUIT_MAINT = 16
+QUIT_RRECVERY_MODE = 16
 QUIT_UPGRADE_PROGRAM = 42
 QUIT_IMAGE_RESTORE = 43
-QUIT_RRECVERY_MODE = 44
+
+getBoxDisplayName = HardwareInfo().get_device_model()
 
 def isInfoBarInstance():
 	global infoBarInstance
@@ -52,7 +56,7 @@ class StandbyScreen(Screen):
 		Screen.__init__(self, session)
 		self.avswitch = AVSwitch()
 
-		print "[Standby] enter standby"
+		print("[Standby] enter standby")
 
 		if os.path.exists("/usr/script/standby_enter.sh"):
 			Console().ePopen("/usr/script/standby_enter.sh")
@@ -85,7 +89,7 @@ class StandbyScreen(Screen):
 			self.prev_running_service = eServiceReference(config.tv.lastservice.value)
 		service = self.prev_running_service and self.prev_running_service.toString()
 		if service:
-			if service.rsplit(":", 1)[1].startswith("/"):
+			if "%3a//" not in service and service.rsplit(":", 1)[1].startswith("/"):
 				self.paused_service = hasattr(self.session.current_dialog, "pauseService") and hasattr(self.session.current_dialog, "unPauseService") and self.session.current_dialog or self.infoBarInstance
 				self.paused_action = hasattr(self.paused_service, "seekstate") and hasattr(self.paused_service, "SEEK_STATE_PLAY") and self.paused_service.seekstate == self.paused_service.SEEK_STATE_PLAY
 				self.paused_action and self.paused_service.pauseService()
@@ -100,19 +104,20 @@ class StandbyScreen(Screen):
 			else:
 				self.timeHandler.m_timeUpdated.get().append(self.stopService)
 
-		if self.session.pipshown:
+		if hasattr(self.session, "pipshown") and self.session.pipshown:
 			self.infoBarInstance and hasattr(self.infoBarInstance, "showPiP") and self.infoBarInstance.showPiP()
+		if hasattr(self.session, "pip"):
+			del self.session.pip
+		self.session.pipshown = False
 
-		if SystemInfo["ScartSwitch"]:
-			self.avswitch.setInput("SCART")
-		else:
-			self.avswitch.setInput("AUX")
+		#set input to vcr scart
+		self.avswitch.setInput("off")
 
 		gotoShutdownTime = int(config.usage.standby_to_shutdown_timer.value)
 		if gotoShutdownTime:
 			self.standbyTimeoutTimer.startLongTimer(gotoShutdownTime)
 
-		if self.StandbyCounterIncrease is not 1:
+		if self.StandbyCounterIncrease != 1:
 			gotoWakeupTime = isNextWakeupTime(True)
 			if gotoWakeupTime != -1:
 				curtime = localtime(time())
@@ -144,7 +149,7 @@ class StandbyScreen(Screen):
 		globalActionMap.setEnabled(True)
 		if RecordTimer.RecordTimerEntry.receiveRecordEvents:
 			RecordTimer.RecordTimerEntry.stopTryQuitMainloop()
-		self.avswitch.setInput("ENCODER")
+		self.avswitch.setInput("encoder")
 		self.leaveMute()
 		if os.path.exists("/usr/script/standby_leave.sh"):
 			Console().ePopen("/usr/script/standby_leave.sh")
@@ -159,7 +164,7 @@ class StandbyScreen(Screen):
 			config.misc.standbyCounter.value += 1
 
 	def Power(self):
-		print "[Standby] leave standby"
+		print("[Standby] leave standby")
 		self.close(True)
 
 	def setMute(self):
@@ -191,7 +196,7 @@ class StandbyScreen(Screen):
 							duration += 24 * 3600
 						self.standbyTimeoutTimer.startLongTimer(duration)
 						return
-		if self.session.screen["TunerInfo"].tuner_use_mask or mediafilesInUse(self.session):
+		if self.session.screen["TunerInfo"].tuner_use_mask or mediaFilesInUse(self.session):
 			self.standbyTimeoutTimer.startLongTimer(600)
 		else:
 			RecordTimer.RecordTimerEntry.TryQuitMainloop()
@@ -223,13 +228,13 @@ class Standby(StandbyScreen):
 			self.onClose.append(self.goStandby)
 
 	def goStandby(self):
-		Notifications.AddNotification(StandbyScreen, self.StandbyCounterIncrease)
+		AddNotification(StandbyScreen, self.StandbyCounterIncrease)
 
 
 class StandbySummary(Screen):
 	skin = """
 	<screen position="0,0" size="132,64">
-		<widget source="global.CurrentTime" render="Label" position="0,0" size="132,64" font="Regular;40" halign="center">
+		<widget source="global.CurrentTime" render="Label" position="0,0" size="132,64" font="Regular;40" horizontalAlignment="center">
 			<convert type="ClockToText" />
 		</widget>
 		<widget source="session.RecordState" render="FixedLabel" text=" " position="0,0" size="132,64" zPosition="1" >
@@ -242,19 +247,19 @@ class StandbySummary(Screen):
 class QuitMainloopScreen(Screen):
 	def __init__(self, session, retvalue=QUIT_SHUTDOWN):
 		self.skin = """<screen name="QuitMainloopScreen" position="fill" flags="wfNoBorder">
-				<ePixmap pixmap="icons/input_info.png" position="c-27,c-60" size="53,53" alphatest="on" />
-				<widget name="text" position="center,c+5" size="720,100" font="Regular;22" halign="center" />
+				<ePixmap pixmap="icons/input_info.png" position="c-27,c-60" size="53,53" alphaTest="on" />
+				<widget name="text" position="center,c+5" size="720,100" font="Regular;22" horizontalAlignment="center" />
 			</screen>"""
 		Screen.__init__(self, session)
 		from Components.Label import Label
 		text = {
-			QUIT_SHUTDOWN: _("Your receiver is shutting down"),
-			QUIT_REBOOT: _("Your receiver is rebooting"),
-			QUIT_RESTART: _("The user interface of your receiver is restarting"),
-			QUIT_UPGRADE_FP: _("Your frontprocessor will be updated\nPlease wait until your receiver reboots\nThis may take a few minutes"),
-			QUIT_DEBUG_RESTART: _("The user interface of your receiver is restarting in debug mode"),
-			QUIT_RRECVERY_MODE: _("Your receiver is rebooting into Recovery Mode"),
-			QUIT_UPGRADE_PROGRAM: _("Unattended update in progress\nPlease wait until your receiver reboots\nThis may take a few minutes"),
+			QUIT_SHUTDOWN: _("Your %s is shutting down") % getBoxDisplayName,
+			QUIT_REBOOT: _("Your %s is rebooting") % getBoxDisplayName,
+			QUIT_RESTART: _("The user interface of your %s is restarting") % getBoxDisplayName,
+			QUIT_UPGRADE_FP: _("Your front panel processor will be upgraded\nPlease wait until your %s reboots\nThis may take a few minutes") % getBoxDisplayName,
+			QUIT_DEBUG_RESTART: _("The user interface of your %s is restarting\ndue to an error in StartEnigma.py") % getBoxDisplayName,
+			QUIT_RRECVERY_MODE: _("Your %s is rebooting into Recovery Mode") % getBoxDisplayName,
+			QUIT_UPGRADE_PROGRAM: _("Unattended update in progress\nPlease wait until your %s reboots\nThis may take a few minutes") % getBoxDisplayName,
 			QUIT_MANUFACTURER_RESET: _("Manufacturer reset in progress\nPlease wait until enigma2 restarts")
 		}.get(retvalue)
 		self["text"] = Label(text)
@@ -280,9 +285,9 @@ def getReasons(session, retvalue=QUIT_SHUTDOWN):
 			reasons.append((ngettext("%d job is running in the background!", "%d jobs are running in the background!", jobs) % jobs))
 	if checkTimeshiftRunning():
 		reasons.append(_("You seem to be in timeshift!"))
-	if eStreamServer.getInstance().getConnectedClients() or StreamServiceList:
+	if [stream for stream in eStreamServer.getInstance().getConnectedClients() if stream[0] != '127.0.0.1'] or StreamServiceList:
 		reasons.append(_("Client is streaming from this box!"))
-	if not reasons and mediafilesInUse(session) and retvalue in (QUIT_SHUTDOWN, QUIT_REBOOT, QUIT_UPGRADE_FP, QUIT_UPGRADE_PROGRAM):
+	if not reasons and mediaFilesInUse(session) and retvalue in (QUIT_SHUTDOWN, QUIT_REBOOT, QUIT_UPGRADE_FP, QUIT_UPGRADE_PROGRAM):
 		reasons.append(_("A file from media is in use!"))
 	return "\n".join(reasons)
 
@@ -300,7 +305,7 @@ class TryQuitMainloop(MessageBox):
 				QUIT_UPGRADE_FP: _("Really update the frontprocessor and reboot now?"),
 				QUIT_DEBUG_RESTART: _("Really restart in debug mode now?"),
 				QUIT_RRECVERY_MODE: _("Really reboot into Recovery Mode?"),
-				QUIT_UPGRADE_PROGRAM: _("Really update your settop box and reboot now?"),
+				QUIT_UPGRADE_PROGRAM: _("Really update your %s and reboot now?") % getBoxDisplayName,
 				QUIT_MANUFACTURER_RESET: _("Really perform a manufacturer reset now?")
 			}.get(retvalue, None)
 			if text:
@@ -342,8 +347,11 @@ class TryQuitMainloop(MessageBox):
 					if SystemInfo["HasHDMI-CEC"] and config.hdmicec.enabled.value and config.hdmicec.control_tv_standby.value and config.hdmicec.next_boxes_detect.value:
 						import Components.HdmiCec
 						Components.HdmiCec.hdmi_cec.secondBoxActive()
+						if not hasattr(self, "quitScreen"):
+							self.quitScreen = self.session.instantiateDialog(QuitMainloopScreen)
+							self.quitScreen.show()
 						self.delay = eTimer()
-						self.delay.timeout.callback.append(self.quitMainloop)
+						self.delay.timeout.callback.append(self.quitMainloopDelay)
 						self.delay.start(1500, True)
 						return
 			elif not inStandby:
@@ -352,6 +360,10 @@ class TryQuitMainloop(MessageBox):
 			self.quitMainloop()
 		else:
 			MessageBox.close(self, True)
+
+	def quitMainloopDelay(self):
+		self.session.nav.stopService()
+		quitMainloop(self.retval)
 
 	def quitMainloop(self):
 		self.session.nav.stopService()
@@ -366,3 +378,28 @@ class TryQuitMainloop(MessageBox):
 	def __onHide(self):
 		global inTryQuitMainloop
 		inTryQuitMainloop = False
+
+
+class SwitchToAndroid(Screen):
+	def __init__(self, session):
+		self.session = session
+		Screen.__init__(self, session)
+		self["myActionMap"] = ActionMap(["SetupActions", "ColorActions"],
+		{
+			"ok": self.goAndroid,
+			"cancel": self.close,
+		}, -1)
+		self.onShown.append(self.switchAndroid)
+
+	def goAndroid(self, answer):
+		from Screens.Standby import TryQuitMainloop
+		if answer:
+			with open('/dev/block/by-name/flag', 'wb') as f:
+				f.write(struct.pack("B", 0))
+			self.session.open(TryQuitMainloop, 2)
+		else:
+			self.close()
+
+	def switchAndroid(self):
+		self.onShown.remove(self.switchAndroid)
+		self.session.openWithCallback(self.goAndroid, MessageBox, _("\n Do you want to switch to Android ?"))

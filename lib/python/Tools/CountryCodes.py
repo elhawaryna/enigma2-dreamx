@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ISO3166 = [
 	(_("Afghanistan"), "AF", "AFG"),
 	(_("Aland Islands"), "AX", "ALA"),
@@ -130,7 +131,6 @@ ISO3166 = [
 	(_("Lithuania"), "LT", "LTU"),
 	(_("Luxembourg"), "LU", "LUX"),
 	(_("Macao"), "MO", "MAC"),
-	(_("Macedonia (the former Yugoslav Republic of)"), "MK", "MKD"),
 	(_("Madagascar"), "MG", "MDG"),
 	(_("Malawi"), "MW", "MWI"),
 	(_("Malaysia"), "MY", "MYS"),
@@ -163,6 +163,7 @@ ISO3166 = [
 	(_("Nigeria"), "NG", "NGA"),
 	(_("Niue"), "NU", "NIU"),
 	(_("Norfolk Island"), "NF", "NFK"),
+	(_("North Macedonia (The Republic of)"), "MK", "MKD"),
 	(_("Northern Mariana Islands"), "MP", "MNP"),
 	(_("Norway"), "NO", "NOR"),
 	(_("Oman"), "OM", "OMN"),
