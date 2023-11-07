@@ -48,6 +48,9 @@ public:
 	void setBackgroundColor(const gRGB &col);
 	void clearBackgroundColor();
 
+	void setPadding(const eRect &padding) { m_padding = padding; }
+	eRect getPadding() { return m_padding; }
+
 	void setZPosition(int z);
 	void setTransparent(int transp);
 
@@ -97,6 +100,13 @@ private:
 	int m_z_position;
 	int m_lowered;
 	int m_notify_child_on_position_change;
+
+	bool m_gradient_set;
+	int m_gradient_direction, m_gradient_blend;
+	gRGB m_gradient_startcolor, m_gradient_endcolor;
+
+	eRect m_padding;
+
 protected:
 	void mayKillFocus();
 public:
@@ -132,6 +142,15 @@ public:
 	void setPositionNotifyChild(int n) { m_notify_child_on_position_change = 1; }
 
 	void notifyShowHide();
+
+	void setBackgroundGradient(const gRGB &startcolor, const gRGB &endcolor, int direction, int blend);
+
+	enum
+	{
+		GRADIENT_VERTICAL = 0,
+		GRADIENT_HORIZONTAL = 1
+	};
+
 };
 
 extern eWidgetDesktop *getDesktop(int which);
