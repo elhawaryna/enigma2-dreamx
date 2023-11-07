@@ -2,9 +2,6 @@
 #define __dvb_idvb_h
 
 #ifndef SWIG
-#if defined(DMAMLOGIC)
-#include <lib/base/sigc.h>
-#endif
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/video.h>
 #include <lib/base/object.h>
@@ -300,16 +297,16 @@ public:
 	int m_flags;
 	enum
 	{
-		dxNoSDT=1,    // don't get SDT
-		dxDontshow=2,
-		dxNoDVB=4,  // dont use PMT for this service ( use cached pids )
-		dxHoldName=8,
-		dxNewFound=64,
-		dxIsDedicated3D=128,
-		dxIsParentalProtected=256,
-		dxIsScrambledPMT=1024,
-		dxCenterDVBSubs=2048,
-		dxNoEIT=4096,
+		dxNoSDT=1,                 // don't fetch SDT
+		dxDontshow=2,              // don't show service in all services list
+		dxNoDVB=4,                 // dont use PMT for this service ( use cached pids )
+		dxHoldName=8,              // don't change service name if label differs in the SDT
+		dxNewFound=64,             // show in last scanned bouquet ( until next restart )
+		dxIsDedicated3D=128,       // 3D channel
+		dxIsParentalProtected=256, // service with parental protection
+		dxIsScrambledPMT=1024,     // identical to dxNoDVB when used in pmt.cpp and in servicedvbstream.cpp used to record cached pids
+		dxCenterDVBSubs=2048,      // centre DVB subtitles
+		dxNoEIT=4096,              // disable EIT event parsing when using EPG_IMPORT
 	};
 
 	bool usePMT() const { return !(m_flags & dxNoDVB); }
@@ -524,7 +521,7 @@ public:
 	virtual int closeFrontend(bool force = false, bool no_delayed = false)=0;
 	virtual void reopenFrontend()=0;
 #ifndef SWIG
-	virtual RESULT connectStateChange(const sigc::slot1<void,iDVBFrontend*> &stateChange, ePtr<eConnection> &connection)=0;
+	virtual RESULT connectStateChange(const sigc::slot<void(iDVBFrontend*)> &stateChange, ePtr<eConnection> &connection)=0;
 #endif
 	virtual RESULT getState(int &SWIG_OUTPUT)=0;
 	virtual RESULT setTone(int tone)=0;
@@ -597,8 +594,8 @@ public:
 	{
 		evtPreStart, evtEOF, evtSOF, evtFailed, evtStopped
 	};
-	virtual RESULT connectStateChange(const sigc::slot1<void,iDVBChannel*> &stateChange, ePtr<eConnection> &connection)=0;
-	virtual RESULT connectEvent(const sigc::slot2<void,iDVBChannel*,int> &eventChange, ePtr<eConnection> &connection)=0;
+	virtual RESULT connectStateChange(const sigc::slot<void(iDVBChannel*)> &stateChange, ePtr<eConnection> &connection)=0;
+	virtual RESULT connectEvent(const sigc::slot<void(iDVBChannel*,int)> &eventChange, ePtr<eConnection> &connection)=0;
 
 		/* demux capabilities */
 	enum
@@ -649,12 +646,12 @@ public:
 
 			/* backend */
 	enum { evtSeek, evtSkipmode, evtSpanChanged };
-	RESULT connectEvent(const sigc::slot1<void, int> &event, ePtr<eConnection> &connection);
+	RESULT connectEvent(const sigc::slot<void(int)> &event, ePtr<eConnection> &connection);
 
 	std::list<std::pair<pts_t,pts_t> > m_spans;	/* begin, end */
 	std::list<std::pair<int, pts_t> > m_seek_requests; /* relative, delta */
 	pts_t m_skipmode_ratio;
-	sigc::signal1<void,int> m_event;
+	sigc::signal<void(int)> m_event;
 	ePtr<iDVBDemux> m_decoding_demux;
 	ePtr<iTSMPEGDecoder> m_decoder;
 };
@@ -700,6 +697,7 @@ public:
 	virtual RESULT getCAAdapterID(uint8_t &id)=0;
 	virtual RESULT flush()=0;
 	virtual int openDVR(int flags)=0;
+	virtual int getSource()=0;
 };
 
 class iTSMPEGDecoder: public iObject
@@ -750,6 +748,14 @@ public:
 		/** Display any complete data as fast as possible */
 	virtual RESULT setTrickmode()=0;
 
+	virtual RESULT prepareFCC(int fe_id, int vpid, int vtype, int pcrpid)=0;
+
+	virtual RESULT fccDecoderStart()=0;
+
+	virtual RESULT fccDecoderStop()=0;
+
+	virtual RESULT fccUpdatePids(int fe_id, int vpid, int vtype, int pcrpid)=0;
+
 	virtual RESULT getPTS(int what, pts_t &pts) = 0;
 
 	virtual RESULT showSinglePic(const char *filename) = 0;
@@ -762,7 +768,7 @@ public:
 			eventSizeChanged = VIDEO_EVENT_SIZE_CHANGED,
 			eventFrameRateChanged = VIDEO_EVENT_FRAME_RATE_CHANGED,
 			eventProgressiveChanged = 16,
-#if defined(DMAMLOGIC)
+#ifdef DREAMNEXTGEN
 			eventGammaChanged = 17,
 			eventPtsValid = 32,
 			eventVideoDiscontDetected = 64
@@ -778,7 +784,7 @@ public:
 		unsigned short gamma;
 	};
 
-	virtual RESULT connectVideoEvent(const sigc::slot1<void, struct videoEvent> &event, ePtr<eConnection> &connection) = 0;
+	virtual RESULT connectVideoEvent(const sigc::slot<void(struct videoEvent)> &event, ePtr<eConnection> &connection) = 0;
 
 	virtual int getVideoWidth() = 0;
 	virtual int getVideoHeight() = 0;
