@@ -265,6 +265,11 @@ int eDVBServiceRecord::doPrepare()
 				f->open(m_ref.path.c_str());
 				source = ePtr<iTsSource>(f);
 			}
+			m_event((iRecordableService*)this, evPvrTuneStart);
+		}
+		else
+		{
+			m_event((iRecordableService*)this, evTuneStart);
 		}
 		return m_service_handler.tuneExt(m_ref, source, m_ref.path.c_str(), 0, m_simulate, NULL, servicetype, m_descramble);
 	}
@@ -416,6 +421,12 @@ int eDVBServiceRecord::doRecord()
 					if (i != program.audioStreams.begin())
 						eDebugNoNewLine(", ");
 					eDebugNoNewLine("%04x", i->pid);
+
+					if (i->rdsPid != -1)
+					{
+						pids_to_record.insert(i->rdsPid);
+						eDebugNoNewLine(", (RDS %04x)", i->rdsPid);
+					}
 				}
 				eDebugNoNewLine(")");
 			}
@@ -501,7 +512,7 @@ RESULT eDVBServiceRecord::frontendInfo(ePtr<iFrontendInformation> &ptr)
 	return 0;
 }
 
-RESULT eDVBServiceRecord::connectEvent(const sigc::slot2<void,iRecordableService*,int> &event, ePtr<eConnection> &connection)
+RESULT eDVBServiceRecord::connectEvent(const sigc::slot<void(iRecordableService*,int)> &event, ePtr<eConnection> &connection)
 {
 	connection = new eConnection((iRecordableService*)this, m_event.connect(event));
 	return 0;
@@ -590,11 +601,7 @@ void eDVBServiceRecord::fixupCuts(std::list<pts_t> &offsets)
 			eDebug("[eDVBServiceRecord] fixing up PTS failed, not saving");
 			continue;
 		}
-#if HAVE_AMLOGIC
-		eDebug("[eDVBServiceRecord] fixed up %llx to %llx (offset %lx)", i->second, p, offset);
-#else
-		eDebug("[eDVBServiceRecord] fixed up %llx to %llx (offset %llx)", i->second, p, offset);
-#endif
+		eDebug("[eDVBServiceRecord] fixed up %llx to %llx (offset %jx)", i->second, p, offset);
 		offsets.push_back(p);
 	}
 }
@@ -611,7 +618,7 @@ PyObject *eDVBServiceRecord::getCutList()
 		eDebug("[eDVBServiceRecord] getCutList %llx", p);
 		ePyObject tuple = PyTuple_New(2);
 		PyTuple_SET_ITEM(tuple, 0, PyLong_FromLongLong(p));
-		PyTuple_SET_ITEM(tuple, 1, PyInt_FromLong(2)); /* mark */
+		PyTuple_SET_ITEM(tuple, 1, PyLong_FromLong(2)); /* mark */
 		PyList_Append(list, tuple);
 		Py_DECREF(tuple);
 	}
@@ -621,7 +628,9 @@ PyObject *eDVBServiceRecord::getCutList()
 
 void eDVBServiceRecord::saveCutlist()
 {
-	// Save cuts only when main file is accessible.
+	/* XXX: dupe of eDVBServicePlay::saveCuesheet, refactor plz */
+
+	/* save cuesheet only when main file is accessible. */
 	if (::access(m_filename.c_str(), R_OK) < 0)
 		return;
 
