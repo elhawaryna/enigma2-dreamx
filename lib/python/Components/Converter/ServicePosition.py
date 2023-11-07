@@ -1,5 +1,6 @@
-from Converter import Converter
-from Poll import Poll
+# -*- coding: utf-8 -*-
+from Components.Converter.Converter import Converter
+from Components.Converter.Poll import Poll
 from enigma import iPlayableService
 from Components.Element import cached, ElementError
 from time import localtime, strftime, time

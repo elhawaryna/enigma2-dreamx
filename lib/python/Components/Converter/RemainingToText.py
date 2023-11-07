@@ -1,6 +1,6 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from Components.Converter.Converter import Converter
+from time import time as getTime, localtime, strftime
 from Components.Converter.Poll import Poll
 from Components.Element import cached
 from Components.config import config
@@ -8,17 +8,17 @@ from Components.config import config
 
 class RemainingToText(Poll, Converter):
 	DEFAULT = 0
-	WITH_SECONDS = 1
+	WITH_SECONDS = 2
 	NO_SECONDS = 2
 	IN_SECONDS = 3
 	PERCENTAGE = 4
-	VFD = 5
-	VFD_WITH_SECONDS = 6
-	VFD_NO_SECONDS = 7
-	VFD_IN_SECONDS = 8
-	VFD_PERCENTAGE = 9
-	PROGRESS = 10
-	WITH_SECONDSPROGRESS = 11
+	ONLY_MINUTE = 5
+	ONLY_MINUTE2 = 6
+	VFD = 7
+	VFD_WITH_SECONDS = 8
+	VFD_NO_SECONDS = 9
+	VFD_IN_SECONDS = 10
+	VFD_PERCENTAGE = 11
 
 	def __init__(self, type):
 		Poll.__init__(self)
@@ -57,14 +57,10 @@ class RemainingToText(Poll, Converter):
 			self.type = self.VFD_PERCENTAGE
 			self.poll_interval = 60 * 1000
 			self.poll_enabled = True
-		elif type == "Progress":
-			self.type = self.PROGRESS
-			self.poll_interval = 60 * 1000
-			self.poll_enabled = True
-		elif type == "WithSecondsProgress":
-			self.type = self.WITH_SECONDSPROGRESS
-			self.poll_interval = 60 * 1000
-			self.poll_enabled = True
+		elif type == "OnlyMinute":
+			self.type = self.ONLY_MINUTE
+		elif type == "OnlyMinute2":
+			self.type = self.ONLY_MINUTE2
 		else:
 			self.type = self.DEFAULT
 
@@ -86,7 +82,7 @@ class RemainingToText(Poll, Converter):
 		remaining = 0
 
 		if str(time[1]) != 'None':
-			if self.type < 5:
+			if self.type < 7:
 				if config.usage.swap_time_remaining_on_osd.value == "0":
 					(duration, remaining) = self.source.time
 				elif config.usage.swap_time_remaining_on_osd.value == "1":
@@ -106,13 +102,14 @@ class RemainingToText(Poll, Converter):
 					(duration, remaining, elapsed) = self.source.time
 		else:
 			(duration, remaining) = self.source.time
+
 		l = duration # Length
 		p = elapsed # Position
 		r = remaining  # Remaining
 
 		sign_l = ""
 
-		if self.type < 5:
+		if self.type < 7:
 			if config.usage.elapsed_time_positive_osd.value:
 				sign_p = "+"
 				sign_r = "-"
@@ -205,7 +202,25 @@ class RemainingToText(Poll, Converter):
 							return sign_r + ngettext("%d Min", "%d Mins", (r / 60)) % (r / 60)
 					else:
 						return ngettext("%d Min", "%d Mins", (l / 60)) % (l / 60)
-				elif self.type == self.WITH_SECONDS or self.type == self.WITH_SECONDSPROGRESS:
+				elif self.type == self.ONLY_MINUTE:
+					if remaining is not None:
+						# FIXME What's this
+						return ngettext(_("%d"), _("%d"), (r / 60)) % (r / 60)
+				elif self.type == self.ONLY_MINUTE2:
+					time = getTime()
+					t = localtime(time)
+					d = _("%-H:%M")
+					if remaining is None:
+						return strftime(d, t)
+					if remaining is not None:
+						if config.usage.elapsed_time_positive_vfd.value:
+							myRestMinuten = "%+6d" % (r / 60)
+						else:
+							myRestMinuten = "%+6d" % (r / 60 * -1)
+						if (r / 60) == 0:
+							myRestMinuten = " "
+						return strftime(d, t) + myRestMinuten
+				elif self.type == self.WITH_SECONDS:
 					if remaining is not None:
 						if config.usage.swap_time_remaining_on_osd.value == "1":  # Elapsed
 							return sign_p + "%d:%02d:%02d" % (p / 3600, p % 3600 / 60, p % 60)
@@ -217,7 +232,7 @@ class RemainingToText(Poll, Converter):
 							return sign_r + "%d:%02d:%02d" % (r / 3600, r % 3600 / 60, r % 60)
 					else:
 						return sign_l + "%d:%02d:%02d" % (l / 3600, l % 3600 / 60, l % 60)
-				elif self.type == self.NO_SECONDS or self.type == self.PROGRESS:
+				elif self.type == self.NO_SECONDS:
 					if remaining is not None:
 						if config.usage.swap_time_remaining_on_osd.value == "1":  # Elapsed
 							return sign_p + "%d:%02d" % (p / 3600, p % 3600 / 60)

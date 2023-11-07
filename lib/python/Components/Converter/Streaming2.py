@@ -1,4 +1,5 @@
-from Converter import Converter
+# -*- coding: utf-8 -*-
+from Components.Converter.Converter import Converter
 from Components.Element import cached
 from pprint import pprint
 
@@ -34,6 +35,6 @@ class Streaming2(Converter):
 
 		retval += "\n"
 
-		return(retval)
+		return (retval)
 
 	text = property(getText)

@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from Components.VariableValue import VariableValue
-from Renderer import Renderer
+from Components.Renderer.Renderer import Renderer
 
 from enigma import eGauge
 

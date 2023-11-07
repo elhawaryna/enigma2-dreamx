@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 from Components.Converter.Converter import Converter
 from Components.Element import cached
 from Components.Converter.genre import getGenreStringSub
-from time import localtime, mktime, strftime
 from Components.config import config
 from Components.UsageConfig import dropEPGNewLines, replaceEPGSeparator
+from time import localtime, mktime, strftime
+
 
 class EventName(Converter):
 	NAME = 0

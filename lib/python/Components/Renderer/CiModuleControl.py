@@ -1,9 +1,11 @@
-from Renderer import Renderer
+# -*- coding: utf-8 -*-
+from Components.Renderer.Renderer import Renderer
 from enigma import eDVBCI_UI, eLabel, iPlayableService
 from skin import parameters
 from Components.SystemInfo import SystemInfo
 from Components.VariableText import VariableText
 from os import popen
+
 
 class CiModuleControl(Renderer, VariableText):
 	def __init__(self):
@@ -44,7 +46,7 @@ class CiModuleControl(Renderer, VariableText):
 						add_num = True
 						if string:
 							string += " "
-						if state != -1:
+						if state not in (-1, 3):
 							if state == 0:
 								if not self.allVisible:
 									string += ""

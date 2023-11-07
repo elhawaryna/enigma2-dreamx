@@ -1,8 +1,6 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from Components.Renderer.Renderer import Renderer
 from enigma import ePixmap, ePicLoad
-from Components.AVSwitch import AVSwitch
 from Components.Pixmap import Pixmap
 from Components.config import config
 from Components.Sources.ServiceEvent import ServiceEvent
@@ -21,8 +19,6 @@ class Cover(Renderer):
 	GUI_WIDGET = ePixmap
 
 	def changed(self, what):
-		if not config.usage.movielist_show_cover.value:
-			return
 		if not self.instance:
 			return
 		else:
@@ -33,7 +29,7 @@ class Cover(Renderer):
 				if isinstance(self.source, ServiceEvent):
 					service = self.source.getCurrentService()
 				elif isinstance(self.source, CurrentService):
-					service = self.source.getCurrentServiceReference()
+					service = self.source.getCurrentServiceRef()
 				if service:
 					sname = service.getPath()
 				else:
@@ -57,15 +53,14 @@ class Cover(Renderer):
 					return
 				self.picname = picname
 				if picname != '' and os_path.exists(picname):
-					sc = AVSwitch().getFramebufferScale()
 					size = self.instance.size()
 					self.picload = ePicLoad()
 					self.picload.PictureData.get().append(self.showCoverCallback)
 					if self.picload:
 						self.picload.setPara((size.width(),
 						size.height(),
-						sc[0],
-						sc[1],
+						1,
+						1,
 						False,
 						1,
 						'#00000000'))

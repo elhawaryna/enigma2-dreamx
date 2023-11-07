@@ -1,8 +1,7 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
+from enigma import eWidget, eLabel, eTimer, ePoint, eSize, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_HALIGN_RIGHT, RT_HALIGN_BLOCK, RT_VALIGN_TOP, RT_VALIGN_CENTER, RT_VALIGN_BOTTOM, RT_WRAP
 from Components.Renderer.Renderer import Renderer
 from skin import parseColor, parseFont
-from enigma import eWidget, eLabel, eTimer, ePoint, eSize, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_HALIGN_RIGHT, RT_HALIGN_BLOCK, RT_VALIGN_TOP, RT_VALIGN_CENTER, RT_VALIGN_BOTTOM, RT_WRAP, eCanvas, eRect, gRGB
 
 
 # scroll type:
@@ -84,7 +83,7 @@ class RunningText(Renderer):
 			attribs = []
 			for (attrib, value) in self.skinAttributes:
 				if attrib == "font":
-					self.txfont = parseFont(value, ((1, 1), (1, 1)))
+					self.txfont = parseFont(value, screen.scale)
 				elif attrib == "foregroundColor":
 					self.scroll_label.setForegroundColor(parseColor(value))
 				elif attrib in ("shadowColor", "borderColor"):	# fake for openpli-enigma2
@@ -158,7 +157,7 @@ class RunningText(Renderer):
 
 		self.scroll_label.setFont(self.txfont)
 		if not (self.txtflags & RT_WRAP):
-			self.scroll_label.setNoWrap(1)
+			self.scroll_label.setWrap(0)
 		self.scroll_label.setVAlign(valign)
 		self.scroll_label.setHAlign(self.halign)
 		self.scroll_label.move(ePoint(0, 0))
@@ -202,8 +201,8 @@ class RunningText(Renderer):
 
 	def calcMoving(self):
 		self.X = self.Y = 0
-		#if not (self.txtflags & RT_WRAP): ## This option if enable break Arabic language
-		#	self.txtext = self.txtext.replace("\xe0\x8a", " ").replace(chr(0x8A), " ").replace("\n", " ").replace("\r", " ")
+		if not (self.txtflags & RT_WRAP):
+			self.txtext = self.txtext.replace("\xe0\x8a", " ").replace(chr(0x8A), " ").replace("\n", " ").replace("\r", " ")
 
 		self.scroll_label.setText(self.txtext)
 
