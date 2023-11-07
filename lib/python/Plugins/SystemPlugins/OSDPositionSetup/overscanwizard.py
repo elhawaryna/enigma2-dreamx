@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.ConfigList import ConfigListScreen
-from Components.config import config, ConfigSlider, getConfigListEntry, ConfigYesNo
+from Components.config import config, ConfigSlider, ConfigYesNo
 from Components.Label import Label
 from Plugins.SystemPlugins.OSDPositionSetup.plugin import setPosition, setConfiguredPosition
 from enigma import quitMainloop, eTimer, getDesktop
@@ -12,18 +13,18 @@ class OverscanWizard(Screen, ConfigListScreen):
 	def __init__(self, session, timeOut=True):
 		if getDesktop(0).size().height() == 1080:
 			self.skin = """<screen position="fill" flags="wfNoBorder">
-				<ePixmap pixmap="overscan1920x1080.png" position="0,0" size="1920,1080" zPosition="3" alphatest="on"/>
+				<ePixmap pixmap="overscan1920x1080.png" position="0,0" size="1920,1080" zPosition="3" alphaTest="on"/>
 				<eLabel position="338,190" size="1244,698" zPosition="3"/>
 				<widget name="title" position="353,202" size="1224,50" font="Regular;40" foregroundColor="blue" zPosition="4"/>
-				<widget name="introduction" position="343,252" size="1234,623" halign="center" valign="center" font="Regular;30" zPosition="4"/>
-				<widget name="config" position="343,662" size="1234,226" font="Regular;30" itemHeight="40" zPosition="4"/>
+				<widget name="introduction" position="343,252" size="1234,623" horizontalAlignment="center" verticalAlignment="center" font="Regular;30" zPosition="4"/>
+				<widget name="config" position="343,662" size="1234,226" font="Regular;30" valueFont="Regular;30" itemHeight="40" zPosition="4"/>
 			</screen>"""
 		else:
 			self.skin = """<screen position="fill"  flags="wfNoBorder">
-				<ePixmap pixmap="overscan1280x720.png" position="0,0" size="1280,720" zPosition="3" alphatest="on"/>
+				<ePixmap pixmap="overscan1280x720.png" position="0,0" size="1280,720" zPosition="3" alphaTest="on"/>
 				<eLabel position="235,131" size="810,457" zPosition="3"/>
 				<widget name="title" position="240,135" size="800,40" font="Regular;30" foregroundColor="blue" zPosition="4"/>
-				<widget name="introduction" position="240,175" size="800,623" halign="center" valign="center" font="Regular;18" zPosition="4"/>
+				<widget name="introduction" position="240,175" size="800,623" horizontalAlignment="center" verticalAlignment="center" font="Regular;18" zPosition="4"/>
 				<widget name="config" position="240,590" size="800,120" font="Regular;20" itemHeight="30" zPosition="4"/>
 			</screen>"""
 
@@ -77,7 +78,7 @@ class OverscanWizard(Screen, ConfigListScreen):
 				"If you see the tips of all eight arrowheads, then your TV has overscan disabled.\n\n"
 				"Test Pattern by TigerDave - www.tigerdave.com/ht_menu.htm"))
 			self.yes_no = ConfigYesNo(default=True, graphic=False)
-			self.list.append(getConfigListEntry(_("Did you see all eight arrow heads?"), self.yes_no))
+			self.list.append((_("Did you see all eight arrow heads?"), self.yes_no))
 			self.save_new_position = False
 			setPosition(0, 720, 0, 576)
 		elif self.step == 2:
@@ -87,7 +88,7 @@ class OverscanWizard(Screen, ConfigListScreen):
 				"has overscan enabled, and is not configured properly.\n\n"
 				"Please refer to your TV's manual to find how you can disable overscan on your TV. Look for terms like 'Just fit', 'Full width', etc. "
 				"If you can't find it, ask other users at http://forums.openpli.org.\n\n"))
-			self.list.append(getConfigListEntry(_("Did you see all eight arrow heads?"), self.yes_no))
+			self.list.append((_("Did you see all eight arrow heads?"), self.yes_no))
 			self.yes_no.value = True
 			self.save_new_position = False
 			setPosition(0, 720, 0, 576)
@@ -101,10 +102,10 @@ class OverscanWizard(Screen, ConfigListScreen):
 			self.dst_right = ConfigSlider(default=config.plugins.OSDPositionSetup.dst_left.value + config.plugins.OSDPositionSetup.dst_width.value, increment=1, limits=(0, 720))
 			self.dst_top = ConfigSlider(default=config.plugins.OSDPositionSetup.dst_top.value, increment=1, limits=(0, 576))
 			self.dst_bottom = ConfigSlider(default=config.plugins.OSDPositionSetup.dst_top.value + config.plugins.OSDPositionSetup.dst_height.value, increment=1, limits=(0, 576))
-			self.list.append(getConfigListEntry(_("left"), self.dst_left))
-			self.list.append(getConfigListEntry(_("right"), self.dst_right))
-			self.list.append(getConfigListEntry(_("top"), self.dst_top))
-			self.list.append(getConfigListEntry(_("bottom"), self.dst_bottom))
+			self.list.append((_("left"), self.dst_left))
+			self.list.append((_("right"), self.dst_right))
+			self.list.append((_("top"), self.dst_top))
+			self.list.append((_("bottom"), self.dst_bottom))
 			setConfiguredPosition()
 		elif self.step == 4:
 			self["introduction"].setText(_("You did not see all eight arrow heads. This means your TV has overscan enabled "
@@ -115,14 +116,14 @@ class OverscanWizard(Screen, ConfigListScreen):
 				"When you select a different skin, the user interface of your receiver will restart.\n\n"
 				"Note: you can always start the Overscan wizard later, via\n\nmenu->installation->system->Overscan wizard"))
 			self.yes_no.value = False
-			self.list.append(getConfigListEntry(_("Do you want to select a different skin?"), self.yes_no))
+			self.list.append((_("Do you want to select a different skin?"), self.yes_no))
 		elif self.step == 5:
 			self.Timer.stop()
 			self.setTitle(_("Overscan wizard"))
 			self["introduction"].setText(_("The overscan wizard has been completed.\n\n"
 				"Note: you can always start the Overscan wizard later, via\n\nMenu->Installation->System->Audio/Video->Overscan wizard"))
 			self.yes_no.value = True
-			self.list.append(getConfigListEntry(_("Do you want to quit the overscan wizard?"), self.yes_no))
+			self.list.append((_("Do you want to quit the overscan wizard?"), self.yes_no))
 		elif self.step == 6:
 			config.skin.primary_skin.value = "PLi-HD/skin.xml"
 			config.save()
@@ -135,7 +136,7 @@ class OverscanWizard(Screen, ConfigListScreen):
 	def TimerTimeout(self):
 		self.countdown -= 1
 		self.setTitle(_("Overscan wizard") + " (%s)" % self.countdown)
-		if not(self.countdown):
+		if not (self.countdown):
 			self.keyCancel()
 
 	def keyLeft(self):

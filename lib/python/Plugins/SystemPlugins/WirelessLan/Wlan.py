@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Components.config import config, ConfigYesNo, NoSave, ConfigSubsection, ConfigText, ConfigSelection, ConfigPassword
 from Components.Console import Console
 from Components.Network import iNetwork
@@ -5,7 +6,6 @@ from Components.Network import iNetwork
 import enigma
 
 import os
-from string import maketrans, strip
 from pythonwifi.iwlibs import Wireless, getWNICnames
 from pythonwifi import flags as wififlags
 
@@ -54,7 +54,7 @@ class Wlan:
 			else:
 				b = b + chr(i)
 
-		self.asciitrans = maketrans(a, b)
+		self.asciitrans = str.maketrans(a, b)
 
 	def asciify(self, str):
 		return str.translate(self.asciitrans)
@@ -71,8 +71,8 @@ class Wlan:
 	def getNetworkList(self):
 		if self.oldInterfaceState is None:
 			self.oldInterfaceState = iNetwork.getAdapterAttribute(self.iface, "up")
-		if self.oldInterfaceState is False:
-			if iNetwork.getAdapterAttribute(self.iface, "up") is False:
+		if not self.oldInterfaceState:
+			if not iNetwork.getAdapterAttribute(self.iface, "up"):
 				iNetwork.setAdapterAttribute(self.iface, "up", True)
 				enigma.eConsoleAppContainer().execute("ifconfig %s up" % self.iface)
 				if existBcmWifi(self.iface):
@@ -84,7 +84,7 @@ class Wlan:
 			scanresults = ifobj.scan()
 		except:
 			scanresults = None
-			print "[Wlan.py] No wireless networks could be found"
+			print("[Wlan.py] No wireless networks could be found")
 		aps = {}
 		if scanresults is not None:
 			(num_channels, frequencies) = ifobj.getChannelInfo()
@@ -108,8 +108,8 @@ class Wlan:
 
 				extra = []
 				for element in result.custom:
-					element = element.encode()
-					extra.append(strip(self.asciify(element)))
+					element = element.decode()
+					extra.append(str.strip(self.asciify(element)))
 				for element in extra:
 					if 'SignalStrength' in element:
 						signal = element[element.index('SignalStrength') + 15:element.index(',L')]
@@ -127,7 +127,7 @@ class Wlan:
 					'bssid': result.bssid,
 					'channel': channel,
 					'encrypted': encryption,
-					'essid': strip(self.asciify(result.essid)),
+					'essid': str.strip(self.asciify(result.essid)),
 					'iface': self.iface,
 					'maxrate': ifobj._formatBitrate(result.rate[-1][-1]),
 					'noise': '',#result.quality.nlevel-0x100,
@@ -141,7 +141,7 @@ class Wlan:
 
 	def stopGetNetworkList(self):
 		if self.oldInterfaceState is not None:
-			if self.oldInterfaceState is False:
+			if not self.oldInterfaceState:
 				iNetwork.setAdapterAttribute(self.iface, "up", False)
 				enigma.eConsoleAppContainer().execute("ifconfig %s down" % self.iface)
 				if existBcmWifi(self.iface):
@@ -162,7 +162,7 @@ class wpaSupplicant:
 		contents += "ssid=" + essid + "\n"
 		contents += "method=" + encryption + "\n"
 		contents += "key=" + psk + "\n"
-		print "content = \n" + contents
+		print("content = \n" + contents)
 
 		fd = open(getWlConfName(iface), "w")
 		fd.write(contents)
@@ -198,7 +198,7 @@ class wpaSupplicant:
 				else:
 					continue
 		except:
-			print "[Wlan.py] Error parsing ", configfile
+			print("[Wlan.py] Error parsing ", configfile)
 			wsconfig = {
 					'hiddenessid': False,
 					'ssid': "",
@@ -208,7 +208,7 @@ class wpaSupplicant:
 				}
 
 		for (k, v) in wsconf.items():
-			print "[wsconf][%s] %s" % (k, v)
+			print("[wsconf][%s] %s" % (k, v))
 
 		return wsconf
 
@@ -223,7 +223,7 @@ class wpaSupplicant:
 			self.writeBcmWifiConfig(iface, essid, encryption, psk)
 			return
 
-		fp = file(getWlanConfigName(iface), 'w')
+		fp = open(getWlanConfigName(iface), 'w')
 		fp.write('#WPA Supplicant Configuration by enigma2\n')
 		fp.write('ctrl_interface=/var/run/wpa_supplicant\n')
 		fp.write('eapol_version=1\n')
@@ -272,8 +272,8 @@ class wpaSupplicant:
 			configfile = '/etc/wpa_supplicant.conf'
 		try:
 			#parse the wpasupplicant configfile
-			print "[Wlan.py] parsing configfile: ", configfile
-			fp = file(configfile, 'r')
+			print("[Wlan.py] parsing configfile: ", configfile)
+			fp = open(configfile, 'r')
 			supplicant = fp.readlines()
 			fp.close()
 			essid = None
@@ -325,7 +325,7 @@ class wpaSupplicant:
 				}
 
 			for (key, item) in wsconfig.items():
-				if item is "None" or item is "":
+				if item == "None" or item == "":
 					if key == 'hiddenessid':
 						wsconfig['hiddenessid'] = False
 					if key == 'ssid':
@@ -337,7 +337,7 @@ class wpaSupplicant:
 					if key == 'key':
 						wsconfig['key'] = ""
 		except:
-			print "[Wlan.py] Error parsing ", configfile
+			print("[Wlan.py] Error parsing ", configfile)
 			wsconfig = {
 					'hiddenessid': False,
 					'ssid': "",
@@ -358,7 +358,7 @@ class Status:
 
 	def stopWlanConsole(self):
 		if self.WlanConsole is not None:
-			print "[iStatus] killing self.WlanConsole"
+			print("[iStatus] killing self.WlanConsole")
 			self.WlanConsole.killAll()
 			self.WlanConsole = None
 
@@ -445,10 +445,10 @@ class Status:
 
 		if self.WlanConsole is not None:
 			if not self.WlanConsole.appContainers:
-				print "[Wlan.py] self.wlaniface after loading:", self.wlaniface
+				print("[Wlan.py] self.wlaniface after loading:", self.wlaniface)
 				if self.statusCallback is not None:
-						self.statusCallback(True, self.wlaniface)
-						self.statusCallback = None
+					self.statusCallback(True, self.wlaniface)
+					self.statusCallback = None
 
 	def getAdapterAttribute(self, iface, attribute):
 		self.iface = iface

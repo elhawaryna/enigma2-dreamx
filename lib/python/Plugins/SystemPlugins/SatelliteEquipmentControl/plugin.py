@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Plugins.Plugin import PluginDescriptor
@@ -64,7 +65,7 @@ class SecParameterSetup(ConfigListScreen, Screen):
 
 def SecSetupMain(session, **kwargs):
 	def confirmed(answer):
-		if answer is True:
+		if answer:
 			session.open(SecParameterSetup)
 	session.openWithCallback(confirmed, MessageBox, _("Please do not change any values unless you know what you are doing!"), MessageBox.TYPE_INFO)
 

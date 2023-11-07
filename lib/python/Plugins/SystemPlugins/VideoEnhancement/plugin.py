@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 from Plugins.Plugin import PluginDescriptor
 from Components.ConfigList import ConfigListScreen
-from Components.config import getConfigListEntry, config, ConfigNothing
+from Components.config import config, ConfigNothing
 from Components.ActionMap import ActionMap
 from Components.Sources.StaticText import StaticText
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
-import VideoEnhancement
+from .import VideoEnhancement
 import os
 import skin
 
@@ -14,17 +15,17 @@ class VideoEnhancementSetup(ConfigListScreen, Screen):
 
 	skin = """
 		<screen name="VideoEnhancementSetup" position="center,center" size="560,440" title="VideoEnhancementSetup">
-			<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphatest="on" />
-			<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphatest="on" />
-			<ePixmap pixmap="buttons/yellow.png" position="280,0" size="140,40" alphatest="on" />
-			<ePixmap pixmap="buttons/blue.png" position="420,0" size="140,40" alphatest="on" />
-			<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#9f1313" transparent="1" />
-			<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#1f771f" transparent="1" />
-			<widget source="key_yellow" render="Label" position="280,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#a08500" transparent="1" />
-			<widget source="key_blue" render="Label" position="420,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#18188b" transparent="1" />
+			<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphaTest="on" />
+			<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphaTest="on" />
+			<ePixmap pixmap="buttons/yellow.png" position="280,0" size="140,40" alphaTest="on" />
+			<ePixmap pixmap="buttons/blue.png" position="420,0" size="140,40" alphaTest="on" />
+			<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;20" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#9f1313" transparent="1" />
+			<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;20" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#1f771f" transparent="1" />
+			<widget source="key_yellow" render="Label" position="280,0" zPosition="1" size="140,40" font="Regular;20" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#a08500" transparent="1" />
+			<widget source="key_blue" render="Label" position="420,0" zPosition="1" size="140,40" font="Regular;20" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#18188b" transparent="1" />
 			<widget name="config" position="5,50" size="550,350" scrollbarMode="showOnDemand" />
 			<ePixmap pixmap="div-h.png" position="0,400" zPosition="1" size="560,2" />
-			<widget source="introduction" render="Label" position="5,410" size="550,42" zPosition="10" font="Regular;20" halign="center" valign="center" backgroundColor="#25062748" transparent="1" />
+			<widget source="introduction" render="Label" position="5,410" size="550,42" zPosition="10" font="Regular;20" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#25062748" transparent="1" />
 		</screen>"""
 
 	def __init__(self, session):
@@ -54,7 +55,7 @@ class VideoEnhancementSetup(ConfigListScreen, Screen):
 		self["key_yellow"] = StaticText(_("Last config"))
 		self["key_blue"] = StaticText(_("Default"))
 
-		if not self.SelectionChanged in self["config"].onSelectionChanged:
+		if self.SelectionChanged not in self["config"].onSelectionChanged:
 			self["config"].onSelectionChanged.append(self.SelectionChanged)
 		self.rememberOldSettings()
 		self.changedEntry()
@@ -80,7 +81,7 @@ class VideoEnhancementSetup(ConfigListScreen, Screen):
 	def addToConfigList(self, description, configEntry, hinttext, add_to_xtdlist=False):
 		if isinstance(configEntry, ConfigNothing):
 			return None
-		entry = getConfigListEntry(description, configEntry, hinttext)
+		entry = (description, configEntry, hinttext)
 		self.list.append(entry)
 		if add_to_xtdlist:
 			self.xtdlist.append(entry)
@@ -249,13 +250,13 @@ class VideoEnhancementSetup(ConfigListScreen, Screen):
 class VideoEnhancementPreview(ConfigListScreen, Screen):
 	skin = """
 		<screen name="VideoEnhancementPreview" position="center,e-170" size="560,170" title="VideoEnhancementPreview">
-			<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphatest="on" />
-			<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphatest="on" />
-			<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#9f1313" transparent="1" />
-			<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#1f771f" transparent="1" />
+			<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphaTest="on" />
+			<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphaTest="on" />
+			<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;20" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#9f1313" transparent="1" />
+			<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;20" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#1f771f" transparent="1" />
 			<widget name="config" position="5,50" size="550,80" scrollbarMode="showOnDemand" />
 			<ePixmap pixmap="div-h.png" position="0,130" zPosition="1" size="560,2" />
-			<widget source="introduction" render="Label" position="0,140" size="550,25" zPosition="10" font="Regular;21" halign="center" valign="center" backgroundColor="#25062748" transparent="1" />
+			<widget source="introduction" render="Label" position="0,140" size="550,25" zPosition="10" font="Regular;21" horizontalAlignment="center" verticalAlignment="center" backgroundColor="#25062748" transparent="1" />
 		</screen>"""
 
 	def __init__(self, session, configEntry=None, oldSplitMode=None, maxValue=None):
@@ -288,7 +289,7 @@ class VideoEnhancementPreview(ConfigListScreen, Screen):
 	def createSetup(self):
 		self.list = []
 		if self.maxValue == 255:
-			self.configStepsEntry = getConfigListEntry(_("Change step size"), config.pep.configsteps)
+			self.configStepsEntry = (_("Change step size"), config.pep.configsteps)
 
 		if self.configEntry is not None:
 			self.list = self.configEntry
@@ -298,7 +299,7 @@ class VideoEnhancementPreview(ConfigListScreen, Screen):
 		self["config"].list = self.list
 		self["config"].l.setSeperation(self.seperation)
 		self["config"].l.setList(self.list)
-		if not self.selectionChanged in self["config"].onSelectionChanged:
+		if self.selectionChanged not in self["config"].onSelectionChanged:
 			self["config"].onSelectionChanged.append(self.selectionChanged)
 		self.selectionChanged()
 
@@ -311,15 +312,15 @@ class VideoEnhancementPreview(ConfigListScreen, Screen):
 			else:
 				self.isStepSlider = False
 		except AttributeError:
-			print "[VideoEnhancement] no max value"
+			print("[VideoEnhancement] no max value")
 
 	def keyLeft(self):
-		if self.isStepSlider is True:
+		if self.isStepSlider:
 			self["config"].getCurrent()[1].increment = config.pep.configsteps.value
 		ConfigListScreen.keyLeft(self)
 
 	def keyRight(self):
-		if self.isStepSlider is True:
+		if self.isStepSlider:
 			self["config"].getCurrent()[1].increment = config.pep.configsteps.value
 		ConfigListScreen.keyRight(self)
 
@@ -343,6 +344,22 @@ class VideoEnhancementPreview(ConfigListScreen, Screen):
 				pass
 		self.close()
 
+	# for summary:
+	def changedEntry(self):
+		for x in self.onChangedEntry:
+			x()
+		self.selectionChanged()
+
+	def getCurrentEntry(self):
+		return self["config"].getCurrent()[0]
+
+	def getCurrentValue(self):
+		return str(self["config"].getCurrent()[1].getText())
+
+	def createSummary(self):
+		from Screens.Setup import SetupSummary
+		return SetupSummary
+
 
 def videoEnhancementSetupMain(session, **kwargs):
 	session.open(VideoEnhancementSetup)
@@ -357,5 +374,5 @@ def startSetup(menuid):
 def Plugins(**kwargs):
 	list = []
 	if config.usage.setup_level.index >= 2 and os.path.exists("/proc/stb/vmpeg/0/pep_apply"):
-		list.append(PluginDescriptor(name=_("Video enhancement setup"), description=_("Advanced video enhancement setup"), where=PluginDescriptor.WHERE_MENU, needsRestart=False, fnc=startSetup))
-	return list
+		return PluginDescriptor(name=_("Video enhancement setup"), description=_("Advanced video enhancement setup"), where=PluginDescriptor.WHERE_MENU, needsRestart=False, fnc=startSetup)
+	return []
